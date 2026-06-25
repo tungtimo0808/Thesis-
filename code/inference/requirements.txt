@@ -1,0 +1,5 @@
+# Extra packages for the web app (on top of the training environment that already has
+# torch, transformers, ms-swift, bitsandbytes, etc.).
+fastapi
+uvicorn[standard]
+python-multipart
