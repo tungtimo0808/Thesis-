@@ -1,0 +1,43 @@
+============================================================
+PAN924 VLM test report (GCP L4, 4-bit QLoRA)
+model      : google/paligemma2-3b-pt-448
+checkpoint : /home/keytwelvelab/pan924_runs/paligemma/checkpoint-500
+test set   : vlm_report_dataset/converted/qwen/test.jsonl
+============================================================
+
+-- Overall metrics --
+  n_samples                = 465.0000
+  json_valid_pct           = 100.0000
+  micro_precision          = 0.5617
+  micro_recall             = 0.6587
+  micro_f1                 = 0.6063
+  macro_precision          = 0.1810
+  macro_recall             = 0.2148
+  macro_f1                 = 0.1738
+  weighted_precision       = 0.5407
+  weighted_recall          = 0.6587
+  weighted_f1              = 0.5886
+  fdi_precision            = 0.7684
+  fdi_recall               = 0.9012
+  fdi_detection_f1         = 0.8295
+  hallucination_rate       = 0.2316
+  miss_rate                = 0.0988
+  condition_acc_on_detected = 0.7310
+  tooth_accuracy           = 0.5180
+  exact_report_match_rate  = 0.1355
+  text_rouge_l             = 0.6971
+
+-- Per-condition (sorted by support) --
+cond    support        P        R       F1
+H          3788    0.710    0.822    0.762
+R          1712    0.391    0.603    0.474
+Te          267    0.116    0.060    0.079
+C           158    0.000    0.000    0.000
+Di          129    0.205    0.070    0.104
+CpuM        114    0.078    0.035    0.048
+M3i          84    0.219    0.083    0.121
+M3f          37    0.175    0.730    0.283
+Rr           30    0.000    0.000    0.000
+Im           29    0.167    0.103    0.128
+P            28    0.111    0.071    0.087
+Dc           18    0.000    0.000    0.000

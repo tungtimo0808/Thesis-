@@ -1,0 +1,25 @@
+# Secrets / credentials
+*.token
+.env
+*.pem
+*.key
+hf_token*
+# Environments
+.venv/
+venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+# Heavy artifacts (keep code + small results only)
+*.zip
+*.safetensors
+*.pt
+*.pth
+*.ckpt
+*.bin
+checkpoint-*/
+# Datasets (kept out of the repo)
+*.jsonl
+images/
+# OS
+.DS_Store
