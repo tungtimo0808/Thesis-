@@ -1,22 +1,21 @@
 """
 Training script — Qwen2.5-VL-3B-Instruct on the PAN924 dental report task.
 
-This is the exact QLoRA fine-tuning configuration used to train Qwen2.5-VL-3B for the
-thesis "Vision-Language Models for Automatic Dental Report Generation". One model, one
-file, so the training of this model can be read and checked on its own.
+This is the QLoRA fine-tuning configuration for Qwen2.5-VL-3B in the thesis
+"Vision-Language Models for Automatic Dental Report Generation". One model, one file, so
+the training of this model can be read and checked on its own.
 
 Why this model: it is the smaller version of the same Qwen2.5-VL family as the 7B model.
 Training both sizes with the same recipe lets us measure the effect of model size on its
 own, with the architecture held fixed.
 
-Note on the loss: this model was trained with the standard token-level cross-entropy loss.
-The rare-token loss up-weighting (used for Qwen-7B, InternVL3 and Phi) was NOT applied here.
-
 What the script does, step by step:
   1. Load Qwen2.5-VL-3B-Instruct from Hugging Face.
   2. Quantise the frozen base model to 4-bit (QLoRA, NF4 + double quant).
   3. Attach small LoRA adapters to the language-model linear layers (vision encoder frozen).
-  4. Fine-tune for 2 epochs on the balanced PAN924 training split (5,817 rows) and
+  4. Up-weight the training loss on the tokens that spell a rare disease code
+     (rare-token loss, weight 3.0) to fight the strong class imbalance.
+  5. Fine-tune for 2 epochs on the balanced PAN924 training split (5,817 rows) and
      save a checkpoint every 100 steps.
 
 How to run:
@@ -26,20 +25,45 @@ How to run:
 Hardware: a single NVIDIA L4 GPU (24 GB). Framework: ms-swift, via its Python API.
 """
 import os
+import sys
 
 from swift.llm import sft_main, TrainArguments
 
 
+# ---------------------------------------------------------------------------
+# Locate the gcp_l4 folder (two levels up from this file). It holds the two
+# helper files used for the rare-token loss: rare_loss.py and rare_token_ids.py.
+# ---------------------------------------------------------------------------
+GCP_L4_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, GCP_L4_DIR)
+from rare_token_ids import compute_rare_token_ids   # noqa: E402
+
 MODEL = "Qwen/Qwen2.5-VL-3B-Instruct"
 OUTPUT_DIR = os.path.expanduser("~/pan924_runs/qwen3b")
 
+# Rare disease codes that the loss should pay extra attention to, and the two
+# common codes used to subtract shared punctuation tokens.
+RARE_CONDITION_CODES = ["Dc", "Im", "P", "Rr", "M3f", "C", "M3i", "CpuM"]
+COMMON_CONDITION_CODES = ["H", "R"]
+RARE_LOSS_WEIGHT = 3.0
+
 
 def configure_environment():
-    """Set the environment variables that swift reads."""
+    """Set the environment variables that swift and the rare-loss plugin read."""
     # Qwen2.5-VL keeps the native image resolution, capped by MAX_PIXELS.
     os.environ["MAX_PIXELS"] = "401408"
     # Download weights from Hugging Face, not ModelScope.
     os.environ["USE_HF"] = "1"
+
+    # The rare-token loss plugin (rare_loss.py) reads these two variables. We
+    # compute, for THIS model's tokenizer, the token ids that are distinctive to
+    # the rare disease codes, and the weight to multiply their loss by.
+    rare_token_ids, _ = compute_rare_token_ids(
+        MODEL, RARE_CONDITION_CODES, COMMON_CONDITION_CODES
+    )
+    os.environ["RARE_TOKEN_IDS"] = ",".join(str(i) for i in rare_token_ids)
+    os.environ["RARE_LOSS_WEIGHT"] = str(RARE_LOSS_WEIGHT)
+    print("[rare-loss] up-weighting %d token ids x%.1f" % (len(rare_token_ids), RARE_LOSS_WEIGHT))
 
 
 def build_training_arguments() -> TrainArguments:
@@ -81,6 +105,10 @@ def build_training_arguments() -> TrainArguments:
         dataloader_num_workers=4,
         max_length=4096,
         gradient_checkpointing=True,
+
+        # ---- rare-token loss (the imbalance-handling plugin) ----
+        external_plugins=[os.path.join(GCP_L4_DIR, "rare_loss.py")],
+        loss_type="rare_weighted",
 
         # ---- evaluation / checkpointing ----
         eval_strategy="steps",

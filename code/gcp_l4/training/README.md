@@ -8,10 +8,10 @@ using the ms-swift Python API (`from swift.llm import sft_main, TrainArguments`)
 | Model | Folder | Script | Rare-token loss | Attention | Image size |
 |---|---|---|---|---|---|
 | Qwen2.5-VL-7B-Instruct | `qwen2_5_vl_7b/` | `train.py` | yes (weight 3.0) | default | native (MAX_PIXELS) |
-| Qwen2.5-VL-3B-Instruct | `qwen2_5_vl_3b/` | `train.py` | no | default | native (MAX_PIXELS) |
+| Qwen2.5-VL-3B-Instruct | `qwen2_5_vl_3b/` | `train.py` | yes (weight 3.0) | default | native (MAX_PIXELS) |
 | InternVL3-8B | `internvl3_8b/` | `train.py` | yes (weight 3.0) | default | 448px tiles (MAX_PIXELS) |
 | Phi-3.5-vision-instruct | `phi3_5_vision/` | `train.py` | yes (weight 3.0) | eager | dynamic crop (MAX_PIXELS) |
-| PaliGemma 2 (3B, 448px) | `paligemma2_3b/` | `train.py` | no | default | fixed 448px |
+| PaliGemma 2 (3B, 448px) | `paligemma2_3b/` | `train.py` | yes (weight 3.0) | default | fixed 448px |
 
 ## Shared settings (identical across all five scripts)
 
@@ -29,9 +29,9 @@ using the ms-swift Python API (`from swift.llm import sft_main, TrainArguments`)
 ## Per-model differences (the only things that change)
 
 - **Model id** and **output folder**.
-- **Rare-token loss**: applied for Qwen-7B, InternVL3 and Phi (the loss on the tokens
-  that spell a rare disease code is multiplied by 3.0, via the `rare_loss.py` plugin in
-  the parent folder). It was not applied for Qwen-3B and PaliGemma 2.
+- **Rare-token loss**: applied for all five models (the loss on the tokens that spell a
+  rare disease code is multiplied by 3.0, via the `rare_loss.py` plugin in the parent
+  folder).
 - **Attention**: Phi-3.5-vision uses `attn_impl="eager"` for stability.
 - **Image size**: four models keep a native/variable size capped by `MAX_PIXELS=401408`;
   PaliGemma 2 uses a fixed 448px input and does not read `MAX_PIXELS`.
@@ -51,6 +51,6 @@ PaliGemma 2 is gated: accept its license on Hugging Face and run `hf auth login`
 ## Relation to the original pipeline
 
 These per-model scripts make the training of each model explicit and easy to locate.
-They reproduce the same runs that the original generic launcher (`../train.py` +
-`../config.py`, driven by `../run_model.sh`) produced; the hyperparameters here match the
-`args.json` saved inside each model's checkpoint.
+They use the same ms-swift pipeline and the same hyperparameters as the original generic
+launcher (`../train.py` + `../config.py`, driven by `../run_model.sh`), with one script
+per model so the configuration of each model can be read on its own.

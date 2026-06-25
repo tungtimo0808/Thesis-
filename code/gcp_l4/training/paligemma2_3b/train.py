@@ -1,25 +1,25 @@
 """
 Training script — PaliGemma 2 (3B, 448px) on the PAN924 dental report task.
 
-This is the exact QLoRA fine-tuning configuration used to train PaliGemma 2 for the
-thesis "Vision-Language Models for Automatic Dental Report Generation". One model, one
-file, so the training of this model can be read and checked on its own.
+This is the QLoRA fine-tuning configuration for PaliGemma 2 in the thesis
+"Vision-Language Models for Automatic Dental Report Generation". One model, one file, so
+the training of this model can be read and checked on its own.
 
 PaliGemma 2 is the smallest model in the study (about 3B). It uses a SigLIP-So400m vision
 encoder, a single linear projection, and a Gemma 2 language model. Unlike the others it
 uses a FIXED 448-pixel image size, so it does not read the MAX_PIXELS variable.
 
-Two model-specific details:
-  * Gated model. Its license must be accepted on Hugging Face and you must be logged in
-    (`hf auth login`) before the weights can be downloaded.
-  * Standard loss. This model was trained with the standard token-level cross-entropy.
-    The rare-token loss up-weighting was NOT applied here.
+Model-specific detail: PaliGemma 2 is a gated model. Its license must be accepted on
+Hugging Face and you must be logged in (`hf auth login`) before the weights can be
+downloaded.
 
 What the script does, step by step:
   1. Load PaliGemma 2 (3B, 448px) from Hugging Face.
   2. Quantise the frozen base model to 4-bit (QLoRA, NF4 + double quant).
   3. Attach small LoRA adapters to the language-model linear layers (vision encoder frozen).
-  4. Fine-tune for 2 epochs on the balanced PAN924 training split (5,817 rows) and
+  4. Up-weight the training loss on the tokens that spell a rare disease code
+     (rare-token loss, weight 3.0) to fight the strong class imbalance.
+  5. Fine-tune for 2 epochs on the balanced PAN924 training split (5,817 rows) and
      save a checkpoint every 100 steps.
 
 How to run:
@@ -30,19 +30,35 @@ How to run:
 Hardware: a single NVIDIA L4 GPU (24 GB). Framework: ms-swift, via its Python API.
 """
 import os
+import sys
 
 from swift.llm import sft_main, TrainArguments
 
 
+GCP_L4_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, GCP_L4_DIR)
+from rare_token_ids import compute_rare_token_ids   # noqa: E402
+
 MODEL = "google/paligemma2-3b-pt-448"
 OUTPUT_DIR = os.path.expanduser("~/pan924_runs/paligemma")
 
+RARE_CONDITION_CODES = ["Dc", "Im", "P", "Rr", "M3f", "C", "M3i", "CpuM"]
+COMMON_CONDITION_CODES = ["H", "R"]
+RARE_LOSS_WEIGHT = 3.0
+
 
 def configure_environment():
-    """Set the environment variables that swift reads."""
+    """Set the environment variables that swift and the rare-loss plugin read."""
     # PaliGemma 2 uses a fixed 448x448 input, so MAX_PIXELS is not set here.
     # Download weights from Hugging Face, not ModelScope.
     os.environ["USE_HF"] = "1"
+
+    rare_token_ids, _ = compute_rare_token_ids(
+        MODEL, RARE_CONDITION_CODES, COMMON_CONDITION_CODES
+    )
+    os.environ["RARE_TOKEN_IDS"] = ",".join(str(i) for i in rare_token_ids)
+    os.environ["RARE_LOSS_WEIGHT"] = str(RARE_LOSS_WEIGHT)
+    print("[rare-loss] up-weighting %d token ids x%.1f" % (len(rare_token_ids), RARE_LOSS_WEIGHT))
 
 
 def build_training_arguments() -> TrainArguments:
@@ -84,6 +100,10 @@ def build_training_arguments() -> TrainArguments:
         dataloader_num_workers=4,
         max_length=4096,
         gradient_checkpointing=True,
+
+        # ---- rare-token loss (the imbalance-handling plugin) ----
+        external_plugins=[os.path.join(GCP_L4_DIR, "rare_loss.py")],
+        loss_type="rare_weighted",
 
         # ---- evaluation / checkpointing ----
         eval_strategy="steps",
