@@ -386,7 +386,18 @@ A full adult mouth has 32 teeth, 8 in each quadrant. Many patients do not have a
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.75\textwidth]{FDI.jpg}
+    \resizebox{0.62\textwidth}{!}{%
+    \begin{tikzpicture}[
+        q/.style={draw, rounded corners, align=center, minimum width=4cm, minimum height=2cm, font=\small},
+    ]
+        \node[q] (q1) at (0,0)   {\textbf{Quadrant 1}\\upper right\\FDI 11--18};
+        \node[q] (q2) at (5,0)   {\textbf{Quadrant 2}\\upper left\\FDI 21--28};
+        \node[q] (q4) at (0,-3)  {\textbf{Quadrant 4}\\lower right\\FDI 41--48};
+        \node[q] (q3) at (5,-3)  {\textbf{Quadrant 3}\\lower left\\FDI 31--38};
+        \draw[dashed] (2.5,1.4) -- (2.5,-4.4);
+        \draw[dashed] (-2.6,-1.5) -- (7.6,-1.5);
+        \node[font=\footnotesize\itshape] at (2.5,1.7) {midline};
+    \end{tikzpicture}}
     \caption{The FDI tooth numbering system. Quadrants 1 and 2 are the upper jaw; quadrants 3 and 4 are the lower jaw. Inside each quadrant, the numbers grow from the front center toward the back.}
     \label{fig:fdi}
 \end{figure}
@@ -568,8 +579,23 @@ In the first stage, the panoramic image is prepared in the same way as during tr
 
 \begin{figure}[H]
     \centering
-    % Upload the pipeline diagram as pipeline.png
-    \includegraphics[width=\textwidth]{pipeline.png}
+    \resizebox{\textwidth}{!}{%
+    \begin{tikzpicture}[
+        box/.style={draw, rounded corners, align=center, minimum height=1.3cm, minimum width=2.6cm, font=\small},
+        >=Stealth,
+    ]
+        \node[box] (img) {Panoramic image\\(full view or crop)};
+        \node[box, right=1cm of img] (enc) {Vision\\encoder (ViT)};
+        \node[box, right=1cm of enc] (conn) {Connector\\(MLP)};
+        \node[box, right=1cm of conn] (llm) {Language\\model};
+        \node[box, right=1cm of llm] (json) {JSON report\\(parsed)};
+        \node[draw, dashed, rounded corners, align=center, font=\footnotesize, above=0.8cm of llm] (prompt) {Schema\\prompt};
+        \draw[->] (img) -- (enc);
+        \draw[->] (enc) -- node[above, font=\footnotesize] {image tokens} (conn);
+        \draw[->] (conn) -- (llm);
+        \draw[->] (llm) -- (json);
+        \draw[->] (prompt) -- (llm);
+    \end{tikzpicture}}
     \caption{The vision-language report-generation pipeline. A panoramic image (full view or regional crop) is encoded into image tokens, a connector maps them into the language model, the language model reads the tokens and the schema prompt and generates a JSON report, and the JSON is parsed into tooth-level findings for evaluation.}
     \label{fig:pipeline}
 \end{figure}
@@ -628,8 +654,19 @@ Checkpoint: \texttt{Qwen/Qwen2.5-VL-7B-Instruct} \cite{qwen25vl2025}. Its vision
 
 \begin{figure}[H]
     \centering
-    % Upload the Qwen2.5-VL architecture figure as qwen_arch.png
-    \includegraphics[width=0.85\textwidth]{qwen_arch.png}
+    \resizebox{0.95\textwidth}{!}{%
+    \begin{tikzpicture}[
+        box/.style={draw, rounded corners, align=center, minimum height=1.3cm, minimum width=2.8cm, font=\small},
+        >=Stealth,
+    ]
+        \node[box] (img) {Image\\(native resolution)};
+        \node[box, right=1cm of img] (vit) {Native dynamic\\resolution ViT};
+        \node[box, right=1cm of vit] (llm) {Qwen2.5 language\\model ($\sim$7B)};
+        \node[box, right=1cm of llm] (out) {JSON report};
+        \draw[->] (img) -- (vit);
+        \draw[->] (vit) -- node[above, font=\footnotesize] {image tokens} (llm);
+        \draw[->] (llm) -- (out);
+    \end{tikzpicture}}
     \caption{Architecture of Qwen2.5-VL: a native dynamic-resolution ViT feeds image tokens into the Qwen2.5 language model.}
     \label{fig:qwen-arch}
 \end{figure}
@@ -644,8 +681,21 @@ Checkpoint: \texttt{OpenGVLab/InternVL3-8B} \cite{zhu2025internvl3}. It follows 
 
 \begin{figure}[H]
     \centering
-    % Upload the InternVL3 architecture figure as internvl_arch.png
-    \includegraphics[width=0.85\textwidth]{internvl_arch.png}
+    \resizebox{\textwidth}{!}{%
+    \begin{tikzpicture}[
+        box/.style={draw, rounded corners, align=center, minimum height=1.3cm, minimum width=2.6cm, font=\small},
+        >=Stealth,
+    ]
+        \node[box] (img) {Image\\(448px tiles)};
+        \node[box, right=0.9cm of img] (vit) {InternViT-300M};
+        \node[box, right=0.9cm of vit] (conn) {MLP connector\\(pixel unshuffle)};
+        \node[box, right=0.9cm of conn] (llm) {Qwen2.5 language\\model ($\sim$7B)};
+        \node[box, right=0.9cm of llm] (out) {JSON report};
+        \draw[->] (img) -- (vit);
+        \draw[->] (vit) -- (conn);
+        \draw[->] (conn) -- (llm);
+        \draw[->] (llm) -- (out);
+    \end{tikzpicture}}
     \caption{Architecture of InternVL3: the ViT--MLP--LLM pattern with InternViT-300M, a two-layer MLP, and the Qwen2.5 language model. Pixel unshuffle reduces the token count per tile.}
     \label{fig:internvl-arch}
 \end{figure}
@@ -660,8 +710,21 @@ Checkpoint: \texttt{google/paligemma2-3b-pt-448} \cite{steiner2024paligemma2}. I
 
 \begin{figure}[H]
     \centering
-    % Upload the PaliGemma 2 architecture figure as paligemma_arch.png
-    \includegraphics[width=0.85\textwidth]{paligemma_arch.png}
+    \resizebox{\textwidth}{!}{%
+    \begin{tikzpicture}[
+        box/.style={draw, rounded corners, align=center, minimum height=1.3cm, minimum width=2.6cm, font=\small},
+        >=Stealth,
+    ]
+        \node[box] (img) {Image\\(fixed 448px)};
+        \node[box, right=0.9cm of img] (vit) {SigLIP-So400m};
+        \node[box, right=0.9cm of vit] (conn) {Linear\\projection};
+        \node[box, right=0.9cm of conn] (llm) {Gemma~2 language\\model (prefix-LM)};
+        \node[box, right=0.9cm of llm] (out) {JSON report};
+        \draw[->] (img) -- (vit);
+        \draw[->] (vit) -- (conn);
+        \draw[->] (conn) -- (llm);
+        \draw[->] (llm) -- (out);
+    \end{tikzpicture}}
     \caption{Architecture of PaliGemma~2: a SigLIP-So400m encoder with a linear projection feeds image tokens into the Gemma~2 language model, which uses a prefix-LM attention pattern.}
     \label{fig:paligemma-arch}
 \end{figure}
@@ -686,8 +749,25 @@ The matrix $W$ stays frozen, and only $A$ and $B$ are trained. The term $\alpha/
 
 \begin{figure}[H]
     \centering
-    % Upload a LoRA / QLoRA diagram as qlora_arch.png
-    \includegraphics[width=0.7\textwidth]{qlora_arch.png}
+    \resizebox{0.7\textwidth}{!}{%
+    \begin{tikzpicture}[
+        box/.style={draw, rounded corners, align=center, font=\small, minimum height=1cm},
+        >=Stealth,
+    ]
+        \node (x) {$x$};
+        \node[box, fill=gray!15, right=1.6cm of x] (W) {Frozen weight $W$\\(stored in 4-bit)};
+        \node[box, minimum width=1.4cm, below=1.4cm of W] (A) {$A$\\($r\times k$)};
+        \node[box, minimum width=1.4cm, right=1.6cm of A] (B) {$B$\\($d\times r$)};
+        \node[circle, draw, right=1.8cm of W] (sum) {$+$};
+        \node[right=1.4cm of sum] (h) {$h$};
+        \draw[->] (x) -- (W);
+        \draw[->] (W) -- (sum);
+        \draw[->] (x) |- (A);
+        \draw[->] (A) -- (B);
+        \draw[->] (B) -| (sum);
+        \draw[->] (sum) -- (h);
+        \node[below=0.25cm of B, font=\footnotesize] {trainable low-rank update $\tfrac{\alpha}{r}BA$};
+    \end{tikzpicture}}
     \caption{LoRA adaptation. The original weight $W$ is frozen (in QLoRA it is stored in 4-bit). Only the two low-rank matrices $A$ and $B$ are trained, and their output is added to the frozen path.}
     \label{fig:qlora-arch}
 \end{figure}
