@@ -143,7 +143,7 @@
 
 % --- Footer ---
 \begin{center}
-    \textit{Hanoi, January 2026}
+    \textit{Hanoi, June 2026}
 \end{center}
 \newpage
 \newpage
@@ -892,6 +892,16 @@ There are two main points here. First, model size is not the main factor. PaliGe
 
 The detection numbers also show how the models behave. For every model the FDI recall (0.85 to 0.90) is higher than the FDI precision (0.72 to 0.78). So the models find most of the real teeth, but they also report some teeth that are not in the gold report. This is the same effect as the hallucination rate being higher than the miss rate in Table~\ref{tab:results-text}. The fixed-resolution PaliGemma~2 detects teeth as well as the native-resolution models, and it even has the highest recall, so keeping the native image size did not give a clear detection gain here.
 
+Figure~\ref{fig:model-comparison} shows the same comparison as a bar chart. It makes two things easy to see at a glance: the FDI detection bars are high and similar for every model, while the macro F1 bars are low for all of them. The hard part of the task is therefore the condition, not the tooth.
+
+\begin{figure}[H]
+    \centering
+    % Produced by the metrics-plotting script from the per-model metrics JSON files.
+    \includegraphics[width=\textwidth]{model_comparison_bars.png}
+    \caption{Overall recognition metrics for the five models on the test set (465 rows). InternVL3-8B is highest on macro F1, micro F1, and tooth accuracy; PaliGemma~2 is a close second despite being the smallest model. FDI detection is high and similar for all models, while the macro F1 stays low, which shows that condition classification, not tooth detection, is the hard part.}
+    \label{fig:model-comparison}
+\end{figure}
+
 \section{Per-Condition Results}
 
 Table~\ref{tab:results-percond} reports the per-condition F1 for every model. The support column is the number of test teeth for each condition, and it is the same for all models because it comes from the gold labels. The five rare conditions (\texttt{Dc}, \texttt{Im}, \texttt{P}, \texttt{Rr}, \texttt{M3f}) are the ones most affected by the class imbalance, so they are the most important rows to read.
@@ -928,6 +938,16 @@ The per-condition table shows a strong split between common and rare conditions.
 The rare conditions are only partly handled. The imbalance handling did keep some of them above zero. For example, developing third molar (\texttt{M3f}), pontic (\texttt{P}), and implant (\texttt{Im}) have a non-zero F1 for most models, and \texttt{M3f} reaches 0.28 for PaliGemma~2. But two conditions stay at zero almost everywhere. Crown destruction (\texttt{Dc}) is 0.000 for all five models, and residual root (\texttt{Rr}) is 0.000 for four of them. Caries (\texttt{C}) is also close to zero, even though it has 158 test teeth and is not rare. So the problem is not only the class count. A caries lesion is a small change in the tooth texture, and it is hard to read at this image scale.
 
 One more pattern is important. \texttt{M3f} has a high recall but a low precision in the earlier per-model reports, which means the models over-predict it. This is a side effect of the imbalance handling: pushing the model to name a rare condition more often also makes it guess that condition when it is not there.
+
+Figure~\ref{fig:per-condition-heatmap} shows the per-condition F1 as a heatmap. The two top rows (\texttt{H} and \texttt{R}) are dark for every model, and the rows below them are pale, which is the class imbalance seen at a glance. The bottom row, crown destruction (\texttt{Dc}), is empty for all five models.
+
+\begin{figure}[H]
+    \centering
+    % Produced by the metrics-plotting script from the per-model metrics JSON files.
+    \includegraphics[width=0.85\textwidth]{per_condition_heatmap.png}
+    \caption{Per-condition F1 for every model, with the conditions sorted by test support (the count is shown next to each row). The two common conditions (\texttt{H}, \texttt{R}) are read well by all models, while the rare conditions stay close to zero. This view makes the effect of the class imbalance easy to see.}
+    \label{fig:per-condition-heatmap}
+\end{figure}
 
 \section{Effect of the Imbalance Handling}
 
