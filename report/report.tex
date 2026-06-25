@@ -147,6 +147,8 @@
 \end{center}
 \newpage
 \newpage
+\pagenumbering{roman}
+\setcounter{page}{1}
 
 
 
@@ -177,8 +179,6 @@ The contributions of this work are therefore a reusable PAN924-based report data
 
 
 \newpage
-\pagenumbering{arabic} 
-\setcounter{page}{2}  
 
 
 
@@ -186,6 +186,8 @@ The contributions of this work are therefore a reusable PAN924-based report data
 \listoffigures       
 \listoftables     
 
+\pagenumbering{arabic}
+\setcounter{page}{1}
 \chapter{Introduction}
 \section{Background and Motivation}
 The panoramic dental X-ray, also called an orthopantomogram or OPG, is a common image in dentistry \cite{inredd_pan924_2025}. One image can show the teeth, jawbone, and other nearby structures. Dentists use it for treatment planning, checking missing or impacted teeth, reviewing restorations, and observing dental conditions across the mouth. Because the image covers a wide area, it is useful as an overview image before more detailed treatment decisions are made.
@@ -219,19 +221,15 @@ The aim of this work is to study whether vision-language models can produce a us
 
 The specific objectives are:
 
-1. Build a clean instruction dataset from the PAN924 panoramic dental X-ray dataset, based only on the ground-truth labels, that is, the FDI tooth numbers and the dental condition codes.
-
-2. Create five image views for each original image, one full panoramic image and four regional crops, so the model can learn from both the whole mouth and the close-up details.
-
-3. Generate report-style comments and summaries from fixed clinical templates, without adding any finding that is not already in the annotations.
-
-4. Validate the dataset and convert it into the input format of five VLM families, so every model trains and is tested on the same split.
-
-5. Address the strong class imbalance, so the rare dental conditions are not ignored during training.
-
-6. Fine-tune the five models with the same QLoRA setup, so any difference in the results comes from the model and not from the training recipe.
-
-7. Evaluate the models on a held-out test set with one shared metric script, and compare them on tooth detection, condition classification, and report-text quality.
+\begin{itemize}
+    \item Build a clean instruction dataset from the PAN924 panoramic dental X-ray dataset, based only on the ground-truth labels, that is, the FDI tooth numbers and the dental condition codes.
+    \item Create five image views for each original image, one full panoramic image and four regional crops, so the model can learn from both the whole mouth and the close-up details.
+    \item Generate report-style comments and summaries from fixed clinical templates, without adding any finding that is not already in the annotations.
+    \item Validate the dataset and convert it into the input format of the four model families, so every model trains and is tested on the same split.
+    \item Address the strong class imbalance, so the rare dental conditions are not ignored during training.
+    \item Fine-tune the five models with the same QLoRA setup, so any difference in the results comes from the model and not from the training recipe.
+    \item Evaluate the models on a held-out test set with one shared metric script, and compare them on tooth detection, condition classification, and report-text quality.
+\end{itemize}
 
 These objectives keep the project realistic at bachelor level. The focus is a reliable dataset and a controlled comparison, not a finished clinical product.
 
@@ -281,7 +279,7 @@ The raw data comes from the PAN924 panoramic dental X-ray dataset \cite{inredd_p
     \centering
     % Upload the annotated example image as annotated_example.png
     \includegraphics[width=\textwidth]{annotated_example.png}
-    \caption{An annotated panoramic image from the PAN924 dataset. Each tooth is marked with an oriented bounding box and its FDI number. The boxes are stored as four-corner polygons (rotated rectangles), not pixel-tight tooth outlines. In the VLM dataset, each tooth is reduced to its FDI number and its condition label.}
+    \caption{An annotated panoramic image from PAN924. Each tooth has an oriented bounding box and its FDI number. In the VLM dataset, each tooth is reduced to its FDI number and condition label.}
     \label{fig:annotated-example}
 \end{figure}
 
@@ -398,7 +396,7 @@ A full adult mouth has 32 teeth, 8 in each quadrant. Many patients do not have a
         \draw[dashed] (-2.6,-1.5) -- (7.6,-1.5);
         \node[font=\footnotesize\itshape] at (2.5,1.7) {midline};
     \end{tikzpicture}}
-    \caption{The FDI tooth numbering system. Quadrants 1 and 2 are the upper jaw; quadrants 3 and 4 are the lower jaw. Inside each quadrant, the numbers grow from the front center toward the back.}
+    \caption{The FDI tooth numbering system. Quadrants 1--2 are the upper jaw and 3--4 the lower jaw; inside each quadrant the numbers grow from front to back.}
     \label{fig:fdi}
 \end{figure}
 
@@ -596,7 +594,7 @@ In the first stage, the panoramic image is prepared in the same way as during tr
         \draw[->] (llm) -- (json);
         \draw[->] (prompt) -- (llm);
     \end{tikzpicture}}
-    \caption{The vision-language report-generation pipeline. A panoramic image (full view or regional crop) is encoded into image tokens, a connector maps them into the language model, the language model reads the tokens and the schema prompt and generates a JSON report, and the JSON is parsed into tooth-level findings for evaluation.}
+    \caption{The report-generation pipeline: image $\rightarrow$ vision encoder $\rightarrow$ connector $\rightarrow$ language model $\rightarrow$ parsed JSON report. The prompt states the JSON schema to return.}
     \label{fig:pipeline}
 \end{figure}
 
@@ -696,7 +694,7 @@ Checkpoint: \texttt{OpenGVLab/InternVL3-8B} \cite{zhu2025internvl3}. It follows 
         \draw[->] (conn) -- (llm);
         \draw[->] (llm) -- (out);
     \end{tikzpicture}}
-    \caption{Architecture of InternVL3: the ViT--MLP--LLM pattern with InternViT-300M, a two-layer MLP, and the Qwen2.5 language model. Pixel unshuffle reduces the token count per tile.}
+    \caption{Architecture of InternVL3: InternViT-300M and an MLP connector (with pixel unshuffle) feed the Qwen2.5 language model.}
     \label{fig:internvl-arch}
 \end{figure}
 
@@ -725,7 +723,7 @@ Checkpoint: \texttt{google/paligemma2-3b-pt-448} \cite{steiner2024paligemma2}. I
         \draw[->] (conn) -- (llm);
         \draw[->] (llm) -- (out);
     \end{tikzpicture}}
-    \caption{Architecture of PaliGemma~2: a SigLIP-So400m encoder with a linear projection feeds image tokens into the Gemma~2 language model, which uses a prefix-LM attention pattern.}
+    \caption{Architecture of PaliGemma~2: a SigLIP-So400m encoder and a linear projection feed the Gemma~2 language model (prefix-LM).}
     \label{fig:paligemma-arch}
 \end{figure}
 
@@ -768,7 +766,7 @@ The matrix $W$ stays frozen, and only $A$ and $B$ are trained. The term $\alpha/
         \draw[->] (sum) -- (h);
         \node[below=0.25cm of B, font=\footnotesize] {trainable low-rank update $\tfrac{\alpha}{r}BA$};
     \end{tikzpicture}}
-    \caption{LoRA adaptation. The original weight $W$ is frozen (in QLoRA it is stored in 4-bit). Only the two low-rank matrices $A$ and $B$ are trained, and their output is added to the frozen path.}
+    \caption{LoRA adaptation. The weight $W$ is frozen (4-bit in QLoRA); only the low-rank matrices $A$ and $B$ are trained and added to the frozen path.}
     \label{fig:qlora-arch}
 \end{figure}
 
@@ -978,7 +976,7 @@ Figure~\ref{fig:model-comparison} shows the same comparison as a bar chart. It m
     \centering
     % Produced by the metrics-plotting script from the per-model metrics JSON files.
     \includegraphics[width=\textwidth]{model_comparison_bars.png}
-    \caption{Overall recognition metrics for the five models on the test set (465 rows). InternVL3-8B is highest on macro F1, micro F1, and tooth accuracy; PaliGemma~2 is a close second despite being the smallest model. FDI detection is high and similar for all models, while the macro F1 stays low, which shows that condition classification, not tooth detection, is the hard part.}
+    \caption{Overall recognition metrics for the five models. FDI detection is high and similar for all, while macro F1 stays low: condition classification is the hard part. InternVL3 is best, PaliGemma~2 a close second.}
     \label{fig:model-comparison}
 \end{figure}
 
@@ -1025,7 +1023,7 @@ Figure~\ref{fig:per-condition-heatmap} shows the per-condition F1 as a heatmap. 
     \centering
     % Produced by the metrics-plotting script from the per-model metrics JSON files.
     \includegraphics[width=0.85\textwidth]{per_condition_heatmap.png}
-    \caption{Per-condition F1 for every model, with the conditions sorted by test support (the count is shown next to each row). The two common conditions (\texttt{H}, \texttt{R}) are read well by all models, while the rare conditions stay close to zero. This view makes the effect of the class imbalance easy to see.}
+    \caption{Per-condition F1 for every model (conditions sorted by test support). The common conditions \texttt{H} and \texttt{R} are read well; the rare conditions stay close to zero.}
     \label{fig:per-condition-heatmap}
 \end{figure}
 
@@ -1045,7 +1043,7 @@ Figure~\ref{fig:fdi-chart} shows the per-tooth detection recall for the best mod
     \centering
     % Produced by visualize.py as fdi_recall_chart_<model>.png
     \includegraphics[width=\textwidth]{fdi_recall_chart_internvl.png}
-    \caption{Per-tooth (FDI) detection recall on the test set for the best model. The upper jaw is on top and the lower jaw on the bottom; each cell shows the recall and the test count for that tooth.}
+    \caption{Per-tooth (FDI) detection recall for the best model (InternVL3). Each cell shows the recall and test count for that tooth position.}
     \label{fig:fdi-chart}
 \end{figure}
 
@@ -1061,7 +1059,7 @@ Figure~\ref{fig:confusion} shows the confusion matrix between the gold and the p
     \centering
     % Produced by visualize.py as cm_norm_<model>.png
     \includegraphics[width=0.9\textwidth]{cm_norm_internvl.png}
-    \caption{Row-normalised confusion matrix of conditions for the best model. The diagonal is the per-condition recall; bright off-diagonal cells are common mistakes.}
+    \caption{Row-normalised confusion matrix for the best model (InternVL3). The diagonal is per-condition recall; off-diagonal cells are common mistakes.}
     \label{fig:confusion}
 \end{figure}
 
