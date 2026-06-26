@@ -587,17 +587,17 @@ In the first stage, the panoramic image is prepared in the same way as during tr
     \definecolor{cmagenta}{HTML}{B0338C}
     \resizebox{\textwidth}{!}{%
     \begin{tikzpicture}[
-        stage/.style={draw, line width=1pt, rounded corners=4pt, fill=white, align=center,
+        stage/.style={rounded corners=4pt, align=center, text=white,
                       text width=2.7cm, minimum height=2cm, font=\small,
-                      drop shadow={shadow xshift=0.5pt, shadow yshift=-0.7pt, opacity=0.25}},
-        arr/.style={-{Stealth[length=3mm]}, line width=1.1pt, black!45},
-        node distance=0.75cm,
+                      drop shadow={shadow xshift=0.6pt, shadow yshift=-0.8pt, opacity=0.3}},
+        arr/.style={-{Stealth[length=3.5mm]}, line width=1.4pt, black!45},
+        node distance=0.8cm,
     ]
-        \node[stage, draw=cblue]                  (s1) {\textbf{\textcolor{cblue}{Panoramic image}}\\[3pt]{\scriptsize full view or\\regional crop}};
-        \node[stage, draw=cgreen,  right=of s1]   (s2) {\textbf{\textcolor{cgreen}{Vision encoder}}\\[3pt]{\scriptsize ViT $\rightarrow$\\image tokens}};
-        \node[stage, draw=corange, right=of s2]   (s3) {\textbf{\textcolor{corange}{Connector}}\\[3pt]{\scriptsize MLP into the\\LLM input space}};
-        \node[stage, draw=cpurple, right=of s3]   (s4) {\textbf{\textcolor{cpurple}{Language model}}\\[3pt]{\scriptsize reads tokens\\and schema prompt}};
-        \node[stage, draw=cmagenta, right=of s4]  (s5) {\textbf{\textcolor{cmagenta}{JSON report}}\\[3pt]{\scriptsize parsed into\\tooth findings}};
+        \node[stage, fill=cblue]                  (s1) {\textbf{Panoramic image}\\[3pt]{\scriptsize full view or\\regional crop}};
+        \node[stage, fill=cgreen,  right=of s1]   (s2) {\textbf{Vision encoder}\\[3pt]{\scriptsize ViT $\rightarrow$\\image tokens}};
+        \node[stage, fill=corange, right=of s2]   (s3) {\textbf{Connector}\\[3pt]{\scriptsize MLP into the\\LLM input space}};
+        \node[stage, fill=cpurple, right=of s3]   (s4) {\textbf{Language model}\\[3pt]{\scriptsize reads tokens\\and schema prompt}};
+        \node[stage, fill=cmagenta, right=of s4]  (s5) {\textbf{JSON report}\\[3pt]{\scriptsize parsed into\\tooth findings}};
         \draw[arr] (s1) -- (s2);
         \draw[arr] (s2) -- (s3);
         \draw[arr] (s3) -- (s4);
@@ -674,7 +674,7 @@ Checkpoint: \texttt{Qwen/Qwen2.5-VL-7B-Instruct} \cite{qwen25vl2025}. Its vision
         \node[box, right=1cm of vit] (llm) {Qwen2.5 language\\model ($\sim$7B)};
         \node[box, right=1cm of llm] (out) {JSON report};
         \draw[->] (img) -- (vit);
-        \draw[->] (vit) -- node[above, font=\footnotesize] {image tokens} (llm);
+        \draw[->] (vit) -- (llm);
         \draw[->] (llm) -- (out);
     \end{tikzpicture}}
     \caption{Architecture of Qwen2.5-VL: a native dynamic-resolution ViT feeds image tokens into the Qwen2.5 language model.}
@@ -1029,16 +1029,6 @@ The rare conditions are only partly handled. The imbalance handling did keep som
 
 One more pattern is important. \texttt{M3f} has a high recall but a low precision in the earlier per-model reports, which means the models over-predict it. This is a side effect of the imbalance handling: pushing the model to name a rare condition more often also makes it guess that condition when it is not there.
 
-Figure~\ref{fig:per-condition-heatmap} shows the per-condition F1 as a heatmap. The two top rows (\texttt{H} and \texttt{R}) are dark for every model, and the rows below them are pale, which is the class imbalance seen at a glance. The bottom row, crown destruction (\texttt{Dc}), is empty for all five models.
-
-\begin{figure}[H]
-    \centering
-    % Produced by the metrics-plotting script from the per-model metrics JSON files.
-    \includegraphics[width=0.85\textwidth]{per_condition_heatmap.png}
-    \caption{Per-condition F1 for every model (conditions sorted by test support). The common conditions \texttt{H} and \texttt{R} are read well; the rare conditions stay close to zero.}
-    \label{fig:per-condition-heatmap}
-\end{figure}
-
 \section{Effect of the Imbalance Handling}
 
 The training uses two techniques against the class imbalance: oversampling the rare-condition rows (Section~\ref{sec:materials}) and up-weighting the loss on the rare-condition tokens (Section~\ref{sec:loss-weighting}). Their effect is read from the rare-condition rows of Table~\ref{tab:results-percond} and from the macro F1 in Table~\ref{tab:results-recognition}. A model that ignored the rare conditions would score near zero on those rows and would have a low macro F1, even with a high micro F1.
@@ -1163,6 +1153,29 @@ The third conclusion is about the class imbalance. The two techniques, oversampl
 The Faster R-CNN baseline in Section~\ref{sec:frcnn-compare} shows that this is not only a data limit. A specialist detector reaches a much higher rare-condition score on the same data. So a large part of the gap comes from the report-generation approach itself, where the rare codes are weak in the token-level loss, and not only from the class imbalance.
 
 These results fit the goal of the thesis. The output is meant to be a first draft, not a final diagnosis. As a first draft, the models are useful for the common findings: they find most teeth and read healthy and restored teeth fairly well. They are not yet reliable for the rare conditions, and caries is a clear weak point. For this reason, the generated report still needs a dentist to check it, especially for the rare and the small findings. The work shows that vision-language models can produce a structured dental report, but it also shows that the rare-condition recognition is the open problem for future work.
+
+\section{Limitations and Future Work}
+
+A few limitations should be kept in mind when reading these results.
+
+\begin{itemize}
+    \item \textbf{Rare conditions.} The models are weak on the rare conditions. Crown destruction and residual root stay near zero, and caries is almost never read correctly, so the macro F1 is low.
+    \item \textbf{Report text.} The training comments and summaries are built from the ground-truth labels with fixed templates. They are readable, but they are not written by a dentist, and they add no finding beyond the labels.
+    \item \textbf{Single data source.} All images come from one dataset (PAN924, 924 images). The results may not transfer to images from other clinics or machines.
+    \item \textbf{No expert review.} The reports are scored against the label-based gold report, not judged by a dentist, so a clinical-quality check is still missing.
+    \item \textbf{Indicative detector comparison.} The Faster R-CNN baseline uses a different split and an IoU-based match, so that comparison is indicative, not a controlled head-to-head.
+    \item \textbf{4-bit training.} The models are trained in 4-bit QLoRA on a single GPU. Full-precision training might gain a little, but it was not affordable on this hardware.
+\end{itemize}
+
+Several directions follow from these limitations.
+
+\begin{itemize}
+    \item \textbf{Detector--VLM hybrid.} The Faster R-CNN baseline is much stronger at recognition. A natural next step is to let a detector find the teeth and their conditions, and let the VLM turn that output into the report text. This keeps the recognition accuracy of a detector and the readable output of a VLM.
+    \item \textbf{Better rare-class handling.} Stronger methods, such as a focal loss, harder oversampling, or a detect-then-describe two-stage design, could raise the rare-condition scores.
+    \item \textbf{Higher detail for small lesions.} Caries and similar small findings may need a higher input resolution or a lesion-focused crop.
+    \item \textbf{More and broader data.} A larger, multi-source dataset, with expert review of the generated reports, would make the evaluation stronger and the model more general.
+    \item \textbf{Clinical pilot.} The web interface built in this work could be tested with a dentist in the loop, to measure how useful the draft report is in practice.
+\end{itemize}
 
 % --- Appendix starts ---
 \appendix
