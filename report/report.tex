@@ -580,22 +580,31 @@ In the first stage, the panoramic image is prepared in the same way as during tr
 
 \begin{figure}[H]
     \centering
+    \definecolor{cblue}{HTML}{2F6DB0}
+    \definecolor{cgreen}{HTML}{3AA856}
+    \definecolor{corange}{HTML}{E08E0B}
+    \definecolor{cpurple}{HTML}{6A4C9C}
+    \definecolor{cmagenta}{HTML}{B0338C}
     \resizebox{\textwidth}{!}{%
     \begin{tikzpicture}[
-        box/.style={draw, rounded corners, align=center, minimum height=1.3cm, minimum width=2.6cm, font=\small},
-        >=Stealth,
+        stage/.style={draw, line width=1pt, rounded corners=4pt, fill=white, align=center,
+                      text width=2.7cm, minimum height=2cm, font=\small,
+                      drop shadow={shadow xshift=0.5pt, shadow yshift=-0.7pt, opacity=0.25}},
+        arr/.style={-{Stealth[length=3mm]}, line width=1.1pt, black!45},
+        node distance=0.75cm,
     ]
-        \node[box] (img) {Panoramic image\\(full view or crop)};
-        \node[box, right=1cm of img] (enc) {Vision\\encoder (ViT)};
-        \node[box, right=1cm of enc] (conn) {Connector\\(MLP)};
-        \node[box, right=1cm of conn] (llm) {Language\\model};
-        \node[box, right=1cm of llm] (json) {JSON report\\(parsed)};
-        \node[draw, dashed, rounded corners, align=center, font=\footnotesize, above=0.8cm of llm] (prompt) {Schema\\prompt};
-        \draw[->] (img) -- (enc);
-        \draw[->] (enc) -- node[above, font=\footnotesize] {image tokens} (conn);
-        \draw[->] (conn) -- (llm);
-        \draw[->] (llm) -- (json);
-        \draw[->] (prompt) -- (llm);
+        \node[stage, draw=cblue]                  (s1) {\textbf{\textcolor{cblue}{Panoramic image}}\\[3pt]{\scriptsize full view or\\regional crop}};
+        \node[stage, draw=cgreen,  right=of s1]   (s2) {\textbf{\textcolor{cgreen}{Vision encoder}}\\[3pt]{\scriptsize ViT $\rightarrow$\\image tokens}};
+        \node[stage, draw=corange, right=of s2]   (s3) {\textbf{\textcolor{corange}{Connector}}\\[3pt]{\scriptsize MLP into the\\LLM input space}};
+        \node[stage, draw=cpurple, right=of s3]   (s4) {\textbf{\textcolor{cpurple}{Language model}}\\[3pt]{\scriptsize reads tokens\\and schema prompt}};
+        \node[stage, draw=cmagenta, right=of s4]  (s5) {\textbf{\textcolor{cmagenta}{JSON report}}\\[3pt]{\scriptsize parsed into\\tooth findings}};
+        \draw[arr] (s1) -- (s2);
+        \draw[arr] (s2) -- (s3);
+        \draw[arr] (s3) -- (s4);
+        \draw[arr] (s4) -- (s5);
+        \node[anchor=west, font=\large\bfseries] (ttl) at ([yshift=1.55cm]s1.north west) {Inference Workflow: From X-ray to Report};
+        \node[anchor=west, font=\small\color{black!60}] at ([yshift=1.0cm]s1.north west) {A trained model turns a panoramic image into a structured report.};
+        \node[anchor=west, font=\footnotesize\color{black!55}] at ([yshift=-0.85cm]s1.south west) {Only the vision encoder, connector and language model change between models; the prompt, schema and parsing stay the same.};
     \end{tikzpicture}}
     \caption{The report-generation pipeline: image $\rightarrow$ vision encoder $\rightarrow$ connector $\rightarrow$ language model $\rightarrow$ parsed JSON report. The prompt states the JSON schema to return.}
     \label{fig:pipeline}
