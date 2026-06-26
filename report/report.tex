@@ -930,7 +930,7 @@ Two visual summaries support the tables. The first is a confusion matrix between
 
 \chapter{Results}
 
-This chapter reports the results of the five models on the held-out test set of 465 rows. All models use the same checkpoint-selection rule and the same evaluation script, so the numbers can be compared directly. The per-tooth chart and the confusion matrix are shown for the best model, InternVL3, while the tables cover all five models.
+This chapter reports the results of the five models on the held-out test set of 465 rows. All models use the same checkpoint-selection rule and the same evaluation script, so the numbers can be compared directly. The per-tooth chart and the confusion matrix are shown for the best model, InternVL3, while the tables cover all five models. A zero-shot baseline, the same models without fine-tuning, is also reported in Section~\ref{sec:zeroshot}.
 
 \section{Overall Comparison}
 
@@ -991,6 +991,37 @@ Figure~\ref{fig:model-comparison} shows the same comparison as a bar chart. It m
     \caption{Overall recognition metrics for the five models. FDI detection is high and similar for all, while macro F1 stays low: condition classification is the hard part. InternVL3 is best, PaliGemma~2 a close second.}
     \label{fig:model-comparison}
 \end{figure}
+
+\section{Zero-Shot Baseline: the Effect of Fine-tuning}
+\label{sec:zeroshot}
+
+The numbers above are for the fine-tuned models. To show how much the fine-tuning adds, the two strongest families were also run on the test set \emph{without} their LoRA adapter, that is, as the original base model in a zero-shot way. The setup is otherwise identical: the same test rows, the same schema prompt, greedy decoding, and the same 4-bit base. Only the adapter is removed. Table~\ref{tab:base-vs-ft} compares the two settings.
+
+\begin{table}[H]
+\centering
+\caption{Zero-shot base model (no fine-tuning) versus the fine-tuned model. The base run uses the same prompt, test set, decoding, and 4-bit base; only the LoRA adapter is removed.}
+\label{tab:base-vs-ft}
+\small
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{llcccccc}
+\toprule
+Model & Setting & Valid JSON (\%) & FDI F1 & Micro F1 & Macro F1 & Tooth acc. & ROUGE-L \\
+\midrule
+\multirow{2}{*}{InternVL3-8B}  & zero-shot base & 93.3 & 0.020 & 0.000 & 0.000 & 0.000 & 0.087 \\
+                               & fine-tuned     & 100  & \textbf{0.830} & \textbf{0.607} & \textbf{0.189} & \textbf{0.519} & \textbf{0.696} \\
+\midrule
+\multirow{2}{*}{Qwen2.5-VL-7B} & zero-shot base & 100  & 0.077 & 0.000 & 0.000 & 0.000 & 0.100 \\
+                               & fine-tuned     & 100  & \textbf{0.811} & \textbf{0.537} & \textbf{0.152} & \textbf{0.452} & \textbf{0.654} \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+The gap is very large. Without fine-tuning, both base models score essentially zero on recognition. They still produce well-formed JSON (93 to 100\% valid), but the FDI detection F1 is near zero (0.02 to 0.08), and the condition classification and tooth accuracy are exactly zero. In other words, the base model copies the shape of the JSON, but it does not list the right teeth and does not use the right condition labels.
+
+There are two reasons for this. First, the prompt gives the JSON schema, but it does not list the twelve condition codes (\texttt{H}, \texttt{R}, \texttt{Dc}, and so on); those codes are specific to this dataset and are only learned during fine-tuning. Zero-shot, the base model invents its own words (for example \texttt{normal} or \texttt{present}), so no condition matches the gold label. Second, even ignoring the condition, the base model lists very few teeth in the exact region-and-FDI structure that the score requires, so the detection recall is almost zero. The fine-tuned model, in contrast, reaches an FDI F1 around 0.81 to 0.83 and a tooth accuracy around 0.45 to 0.52.
+
+The reading is clear: for this structured dental task, almost all of the measured ability comes from the fine-tuning, not from the base model or the prompt. One caveat should be kept: these numbers are for a zero-shot run with the task prompt. A different prompt, or a few worked examples in the prompt, might lift the base model somewhat, but it would still have to be told the dataset's label set. The result shows that fine-tuning on the PAN924 data is the decisive step.
 
 \section{Per-Condition Results}
 
@@ -1151,6 +1182,8 @@ The second conclusion is about where the models fail. Detection is not the probl
 The third conclusion is about the class imbalance. The two techniques, oversampling and rare-token loss weighting, do help. They keep several rare conditions above zero and stop the model from labelling every tooth as healthy. But the help is limited. The rarest conditions, crown destruction and residual root, stay near zero, and even caries, which is not rare, is almost never read correctly. This weak point is not unique to this work: a 2025 study reported that even GPT-4o, a much larger proprietary VLM, scored zero F1 on caries on panoramic radiographs \cite{liu2025dentalvlm}, which suggests that caries is hard for current VLMs at this image scale. The handling also has a cost: the model now over-predicts the conditions it was pushed to learn, such as developing third molar. So the imbalance is reduced but not solved.
 
 The Faster R-CNN baseline in Section~\ref{sec:frcnn-compare} shows that this is not only a data limit. A specialist detector reaches a much higher rare-condition score on the same data. So a large part of the gap comes from the report-generation approach itself, where the rare codes are weak in the token-level loss, and not only from the class imbalance.
+
+The zero-shot baseline in Section~\ref{sec:zeroshot} points the same way from the other side. Without fine-tuning, the same base models score near zero on recognition, so the ability measured in this work is produced by the fine-tuning on the dental data, not by the base model or the prompt alone.
 
 These results fit the goal of the thesis. The output is meant to be a first draft, not a final diagnosis. As a first draft, the models are useful for the common findings: they find most teeth and read healthy and restored teeth fairly well. They are not yet reliable for the rare conditions, and caries is a clear weak point. For this reason, the generated report still needs a dentist to check it, especially for the rare and the small findings. The work shows that vision-language models can produce a structured dental report, but it also shows that the rare-condition recognition is the open problem for future work.
 
