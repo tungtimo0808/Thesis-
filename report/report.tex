@@ -1188,6 +1188,22 @@ With that in mind, the result is clear. Faster R-CNN is stronger at recognition.
 
 But the two systems do different jobs. The detector outputs boxes and labels only, and it uses two separate models that do not link which condition sits on which tooth. The VLM produces one structured report that lists each tooth, its condition, and a short comment together. So the Faster R-CNN result is best read as a recognition ceiling for this data. It shows how much accuracy a specialist detector can reach, while the VLM trades some of that accuracy for a readable, report-style output.
 
+\section{Web Interface for Report Generation}
+\label{sec:interface}
+
+This last section adds no new measurement. It shows how the best model is packaged into a small tool, so the structured report can be produced from an image without running any script by hand. The interface is a thin layer on top of the same model and the same prompt used in the experiments; it does not change anything that was measured above.
+
+The tool is a web application built with FastAPI. The user uploads a panoramic X-ray, the application runs the fine-tuned InternVL3-8B model with the full-report prompt from Appendix~\ref{app:prompts}, and the model returns the same JSON report used in the evaluation. The raw output therefore stays measurable and identical in form to the test predictions. The application then turns that JSON into a readable page: each region is listed with its teeth in FDI notation, the condition of each tooth is shown with a colour cue (healthy, restored, or abnormal), and the short comments and summary are kept as plain text. The original JSON is still available behind a toggle, so the structured output can be checked directly.
+
+Figure~\ref{fig:interface} shows the result page for one panoramic image. The page is intentionally simple and keeps a clear warning at the top: the output is a draft, and a qualified dentist must review and confirm every finding before any clinical use. This matches the framing of the whole thesis, where the generated report is a first draft and not a final diagnosis.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{interface.png}
+    \caption{The web interface for report generation. The uploaded panoramic X-ray is shown on the left, and the report produced by the fine-tuned InternVL3-8B model is rendered on the right: each tooth is listed by its FDI number with a colour-coded condition, followed by the region comments and the overall summary. A warning makes clear that the report is a draft for dentist review.}
+    \label{fig:interface}
+\end{figure}
+
 \chapter{Discussion and Conclusion}
 
 This chapter interprets the results, states the main limitations and the future work, and closes the thesis.
@@ -1232,7 +1248,7 @@ Several directions follow from these limitations.
     \item \textbf{Better rare-class handling.} Stronger methods, such as a focal loss, harder oversampling, or a detect-then-describe two-stage design, could raise the rare-condition scores.
     \item \textbf{Higher detail for small lesions.} Caries and similar small findings may need a higher input resolution or a lesion-focused crop.
     \item \textbf{More and broader data.} A larger, multi-source dataset, with expert review of the generated reports, would make the evaluation stronger and the model more general.
-    \item \textbf{Clinical pilot.} The web interface built in this work could be tested with a dentist in the loop, to measure how useful the draft report is in practice.
+    \item \textbf{Clinical pilot.} The web interface in Section~\ref{sec:interface} could be tested with a dentist in the loop, to measure how useful the draft report is in practice.
 \end{itemize}
 
 \section{Conclusion}
