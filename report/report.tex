@@ -267,7 +267,7 @@ However, a detection model does not naturally write a clinical report. It can sa
 Because of that, Faster R-CNN is useful as a comparison point. This work compares the VLM outputs with Faster R-CNN based results in Chapter~4. The comparison focuses on tooth-level correctness and condition labels. This helps separate two questions: whether the model recognizes the dental findings, and whether it can express them in a useful report format.
 
 \section{Report Structure}
-The rest of this report is organised as follows. Chapter~2 (Materials and Methods) covers the data and the methods together. The first half describes the PAN924 source data, the five-view design, the label set, and how the strong class imbalance is handled. The second half describes the five vision-language models, the full report-generation pipeline, and how each model is adapted with LoRA and QLoRA. Chapter~3 (Experimental Setup) gives the training environment, the exact settings shared by every model, the way the best checkpoint is selected, and the evaluation metrics. Chapter~4 (Results) reports the per-model scores, the per-condition and per-tooth analysis, the comparison between the models, and a comparison with a Faster R-CNN recognition baseline. The appendix lists the prompt templates, and the References close the report.
+The rest of this report is organised as follows. Chapter~2 (Materials and Methods) covers the data and the methods together. The first half describes the PAN924 source data, the five-view design, the label set, and how the strong class imbalance is handled. The second half describes the five vision-language models, the full report-generation pipeline, and how each model is adapted with LoRA and QLoRA. Chapter~3 (Experimental Setup) gives the training environment, the exact settings shared by every model, the way the best checkpoint is selected, and the evaluation metrics. Chapter~4 (Results) reports the per-model scores, a zero-shot baseline without fine-tuning, the per-condition and per-tooth analysis, and a comparison with a Faster R-CNN recognition baseline. Chapter~5 (Discussion and Conclusion) interprets the results, lists the limitations and future work, and closes the thesis. The appendix lists the prompt templates, and the References close the report.
 
 
 \chapter{Materials and Methods}
@@ -1167,6 +1167,8 @@ With that in mind, the result is clear. Faster R-CNN is stronger at recognition.
 
 But the two systems do different jobs. The detector outputs boxes and labels only, and it uses two separate models that do not link which condition sits on which tooth. The VLM produces one structured report that lists each tooth, its condition, and a short comment together. So the Faster R-CNN result is best read as a recognition ceiling for this data. It shows how much accuracy a specialist detector can reach, while the VLM trades some of that accuracy for a readable, report-style output.
 
+\chapter{Discussion and Conclusion}
+
 \section{Discussion}
 
 The results give a clear picture of what works on this task and what does not.
@@ -1209,6 +1211,14 @@ Several directions follow from these limitations.
     \item \textbf{More and broader data.} A larger, multi-source dataset, with expert review of the generated reports, would make the evaluation stronger and the model more general.
     \item \textbf{Clinical pilot.} The web interface built in this work could be tested with a dentist in the loop, to measure how useful the draft report is in practice.
 \end{itemize}
+
+\section{Conclusion}
+
+This thesis studied whether vision-language models can produce a first-draft dental report from a panoramic X-ray. It built a reusable PAN924-based instruction dataset, with five views per image and report-style targets, fine-tuned five vision-language models with one shared QLoRA recipe, and evaluated them with a single script and against a Faster R-CNN recognition baseline.
+
+The main findings are consistent. InternVL3-8B is the best model, with PaliGemma~2 a close second, which shows that the vision encoder matters more than the parameter count. Detection of the teeth is easy for every model, while naming the condition is the hard part, and the rare conditions, especially caries, stay the open problem. The zero-shot baseline shows that almost all of this ability comes from the fine-tuning, not from the base model. The Faster R-CNN baseline reaches a higher recognition score, while the vision-language models add the readable, structured report that a detector cannot produce.
+
+The overall answer is therefore cautious but positive. Vision-language models can already produce a useful first-draft dental report for the common findings, but the report still needs a dentist to check it, and the rare-condition recognition needs more work. The clearest next step is a detector--VLM hybrid that keeps the recognition strength of a detector and the report-writing strength of a vision-language model.
 
 % --- Appendix starts ---
 \appendix
