@@ -47,14 +47,29 @@ def main():
             print("removed stale", stale)
 
     env = with_max_pixels(make_env(), m["uses_max_pixels"])
+    # The base model has not learned to stop early, so it tends to generate up to the full
+    # max_new_tokens. A large batch of long sequences overflows the 24 GB GPU, so the base
+    # eval uses a smaller batch than the fine-tuned eval. Batch size changes only speed and
+    # memory, not the scores. expandable_segments reduces memory fragmentation.
+    env["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
+    base_max_batch = 2
 
     # The only difference from evaluate.py: no "--adapters", so the base model runs as-is.
+    # The base is loaded in the SAME 4-bit quantization as the fine-tuned runs. This keeps
+    # the comparison fair (same base precision) and also fits the 24 GB GPU; loading the base
+    # in 16-bit would run out of memory at this batch size.
     cmd = [
         "swift", "infer",
         "--model", m["model"],
         "--val_dataset", config.TEST_JSONL,
+        "--torch_dtype", config.TORCH_DTYPE,
+        "--quant_method", config.QUANT_METHOD,
+        "--quant_bits", str(config.QUANT_BITS),
+        "--bnb_4bit_quant_type", config.BNB_4BIT_QUANT_TYPE,
+        "--bnb_4bit_use_double_quant", config.BNB_4BIT_USE_DOUBLE_QUANT,
+        "--bnb_4bit_compute_dtype", config.BNB_4BIT_COMPUTE_DTYPE,
         "--infer_backend", config.INFER_BACKEND,
-        "--max_batch_size", str(config.INFER_MAX_BATCH_SIZE),
+        "--max_batch_size", str(base_max_batch),
         "--max_new_tokens", str(config.INFER_MAX_NEW_TOKENS),
         "--temperature", "0",
         "--result_path", infer_out,
