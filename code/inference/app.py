@@ -26,6 +26,7 @@ os.environ.setdefault("MAX_PIXELS", "401408")   # InternVL3 reads this; matches 
 os.environ.setdefault("USE_HF", "1")            # download from Hugging Face, not ModelScope
 
 from fastapi import FastAPI, UploadFile, File
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import HTMLResponse
 
 from render_report import parse_prediction, CONDITION_NAMES, REGION_NAMES, REGION_ORDER
@@ -86,6 +87,14 @@ def get_engine():
         from swift.llm import PtEngine
         _engine = PtEngine(MODEL, torch_dtype=torch.bfloat16, adapters=[ADAPTER], max_batch_size=1)
     return _engine
+
+
+@app.on_event("startup")
+def _warm_up_model():
+    """Load the model in a background thread at startup so the first upload is not slow and
+    no page is blocked while it loads."""
+    import threading
+    threading.Thread(target=get_engine, daemon=True).start()
 
 
 def run_model(image_path):
@@ -276,7 +285,9 @@ async def analyze(file: UploadFile = File(...)):
         tmp.write(data)
         tmp_path = tmp.name
     try:
-        raw_text = run_model(tmp_path)
+        # run_model blocks (model load + generation); off-load it to a worker thread so the
+        # event loop stays free and other pages (e.g. "/") do not freeze while it runs.
+        raw_text = await run_in_threadpool(run_model, tmp_path)
     finally:
         try:
             os.remove(tmp_path)
