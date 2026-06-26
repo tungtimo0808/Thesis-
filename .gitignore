@@ -23,3 +23,7 @@ checkpoint-*/
 images/
 # OS
 .DS_Store
+
+# Per-epoch training logs (kept out; summaries are tracked)
+results/epoch_*.json
+**/results/epoch_*.json
