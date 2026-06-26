@@ -248,7 +248,7 @@ Most well-known work in this area still focuses on chest X-rays. Dental panorami
 For this thesis, the main lesson from previous work is simple: the model needs data from the target medical domain. A general model may write fluent sentences, but it may still miss dental details. This is why the dataset construction step is important before training or comparing VLMs. The dataset must show the model how dental images, tooth labels, and report text are connected.
  
 \subsection{Vision-Language Models for Medical Reporting}
-Vision-Language Models take an image and a text instruction as input. Then they return a text answer. LLaVA is a clear example of this idea, because it connects a vision encoder with a large language model and uses visual instruction tuning \cite{liu2023visual}. In medicine, VLMs are also studied for report generation and visual question answering \cite{hartsock2024vlmreview}.
+Vision-Language Models take an image and a text instruction as input. Then they return a text answer. LLaVA is a clear example of this idea, because it connects a vision encoder with a large language model and uses visual instruction tuning \cite{liu2023visual}. The same instruction-following ability is what lets a VLM produce a report, not just a single label.
 
 This instruction-based setup is useful for dental reporting. The user can ask the model to return a specific structure, such as a list of visible teeth and their conditions. The answer can include both labels and short natural-language comments. This is different from a detector, which normally returns bounding boxes and class labels.
 
@@ -257,8 +257,8 @@ In dental radiology, VLMs are still newer than detection models. A VLM may be us
 Different VLMs also have different input formats. Qwen-style data, InternVL conversations, Phi prompts, and PaliGemma samples are not identical. To keep the data consistent, this thesis uses one common dataset as the main version. The converted files are generated from that dataset, so model comparison is cleaner. This is also useful because the same training and testing splits can be reused for different model families.
 
 
-\subsection{Tooth Detection on Panoramic X-rays}
-Faster R-CNN is a common baseline for object detection. In dental panoramic X-rays, it can detect tooth boxes, tooth numbers, or dental condition classes. Tuzoff et al. used Faster R-CNN for tooth detection and reported high detection performance on panoramic radiographs \cite{tuzoff2019tooth}.
+\subsection{Tooth and Condition Detection on Panoramic X-rays}
+Faster R-CNN is a common baseline for object detection. In dental panoramic X-rays, it can detect tooth boxes, tooth numbers, or dental condition classes. Tuzoff et al. used Faster R-CNN for tooth detection and reported high detection performance on panoramic radiographs \cite{tuzoff2019tooth}. Deep learning has also been used to read tooth conditions, not only tooth positions. For example, Oztekin et al. detected dental caries on panoramic radiographs with a convolutional neural network and reported high accuracy \cite{oztekin2023caries}. This shows that both the tooth and its condition can be learned from panoramic images, which is also what this thesis asks the models to do.
 
 This type of model is strong when the output is a fixed label and a bounding box. It is also easier to evaluate with standard detection metrics. For example, the model can be judged by whether the tooth location and class are correct. This makes Faster R-CNN a practical baseline for tooth-level tasks.
 
