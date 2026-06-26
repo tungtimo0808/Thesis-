@@ -300,13 +300,36 @@ For each panoramic image, the pipeline creates five image views:
     \item one lower-right image-space crop.
 \end{itemize}
 
-\begin{figure}[h]
+\begin{figure}[H]
     \centering
-    \begin{adjustbox}{center, margin=0.5cm 0cm 0cm 0cm}
-        \includegraphics[width=1\textwidth]{phase_1.png}
-    \end{adjustbox}
-    \caption{Overview of Phase 1: Create image views}
-    \label{fig:phase1}
+    \definecolor{cblue}{HTML}{2F6DB0}
+    \definecolor{cgreen}{HTML}{3AA856}
+    \definecolor{corange}{HTML}{E08E0B}
+    \definecolor{cpurple}{HTML}{6A4C9C}
+    \definecolor{cmagenta}{HTML}{B0338C}
+    \resizebox{\textwidth}{!}{%
+    \begin{tikzpicture}[
+        stage/.style={rounded corners=4pt, align=center, text=white,
+                      text width=2.7cm, minimum height=2cm, font=\small,
+                      drop shadow={shadow xshift=0.6pt, shadow yshift=-0.8pt, opacity=0.3}},
+        arr/.style={-{Stealth[length=3.5mm]}, line width=1.4pt, black!45},
+        node distance=0.8cm,
+    ]
+        \node[stage, fill=cblue]                  (d1) {\textbf{PAN924 data}\\[3pt]{\scriptsize images and\\JSON annotations}};
+        \node[stage, fill=cgreen,  right=of d1]   (d2) {\textbf{Clean labels}\\[3pt]{\scriptsize FDI number\\and condition}};
+        \node[stage, fill=corange, right=of d2]   (d3) {\textbf{Create five views}\\[3pt]{\scriptsize full image and\\four regional crops}};
+        \node[stage, fill=cpurple, right=of d3]   (d4) {\textbf{Build samples}\\[3pt]{\scriptsize prompt, JSON answer,\\image path}};
+        \node[stage, fill=cmagenta, right=of d4]  (d5) {\textbf{Export data}\\[3pt]{\scriptsize VLM JSONL\\and COCO}};
+        \draw[arr] (d1) -- (d2);
+        \draw[arr] (d2) -- (d3);
+        \draw[arr] (d3) -- (d4);
+        \draw[arr] (d4) -- (d5);
+        \node[anchor=west, font=\large\bfseries] (dttl) at ([yshift=1.55cm]d1.north west) {Data Preparation Pipeline};
+        \node[anchor=west, font=\small\color{black!60}] at ([yshift=1.0cm]d1.north west) {From the PAN924 annotations to the training files.};
+        \node[anchor=west, font=\footnotesize\color{black!55}] at ([yshift=-0.85cm]d1.south west) {The same source data is reused for both VLM report generation and Faster R-CNN detection.};
+    \end{tikzpicture}}
+    \caption{The data-preparation pipeline: raw PAN924 images and annotations are cleaned to FDI numbers and condition labels, expanded into five views, built into report-style samples, and exported into the model input formats.}
+    \label{fig:data-pipeline}
 \end{figure}
 
 
