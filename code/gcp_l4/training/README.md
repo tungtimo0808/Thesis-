@@ -52,5 +52,5 @@ PaliGemma 2 is gated: accept its license on Hugging Face and run `hf auth login`
 
 These per-model scripts make the training of each model explicit and easy to locate.
 They use the same ms-swift pipeline and the same hyperparameters as the original generic
-launcher (`../train.py` + `../config.py`, driven by `../run_model.sh`), with one script
+launcher (`../train.py` + `../config.py`, driven by `../run_model.py`), with one script
 per model so the configuration of each model can be read on its own.

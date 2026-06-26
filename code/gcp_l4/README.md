@@ -53,7 +53,7 @@ config.
 ```bash
 tmux new -s pan924
 cd ~/pan924/gcp_l4
-bash run_model.sh qwen        # train -> select checkpoint -> evaluate -> visualize
+python run_model.py qwen      # train -> select checkpoint -> evaluate -> visualize
 ```
 Detach with `Ctrl-b d`; reattach later with `tmux attach -t pan924`. Re-running after an interruption
 **resumes** training from the last checkpoint (eval/viz are cheap to re-run).
@@ -113,8 +113,8 @@ python train.py qwen --rare-loss           # full run
 To push harder: raise `OVERSAMPLE_TARGET`/`REPLICATION_CAP` (re-run `augment_rare.py`),
 `RARE_LOSS_WEIGHT`, or `NUM_EPOCHS` (2→3) in `config.py`, then retrain.
 
-> ⚠️ `run_model.sh` does NOT pass `--rare-loss` by default (it's experimental). Either run the steps
-> by hand with the flag, or add it to the `python train.py "$MODEL"` line in `run_model.sh`.
+> ⚠️ `run_model.py` does NOT pass `--rare-loss` by default (it's experimental). Either run the steps
+> by hand with the flag, or add it to the `train.py` step inside `run_model.py`.
 
 ## Tuning knobs (`config.py`)
 - **OOM during training** → lower `MAX_PIXELS` (1003520 → 802816 → 602112), re-run (resumes). OOM
