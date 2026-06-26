@@ -238,6 +238,8 @@ These objectives keep the project realistic at bachelor level. The focus is a re
 
 \section{Literature Review}
 
+This section reviews three lines of related work: generating reports from medical images, vision-language models for medical reporting, and detection on dental panoramic X-rays.
+
 \subsection{Medical Image Report Generation}
 Medical image report generation has been studied for several years. Many systems use an image encoder and a text decoder. The image encoder reads visual features from the image. The text decoder then generates a report. This design is similar to image captioning, but the medical setting is stricter. The report needs to mention clinically useful findings, not just describe visible objects.
 
@@ -271,8 +273,13 @@ The rest of this report is organised as follows. Chapter~2 (Materials and Method
 
 
 \chapter{Materials and Methods}
+
+This chapter presents the data and the methods together. The first part, Materials, describes the PAN924 source data and how the report dataset is built from it. The second part, Methods, describes the five models and how each one is adapted for the task.
+
 \section{Materials}
 \label{sec:materials}
+
+The materials are the PAN924 dataset and the report dataset built from it. This part covers the raw images, the FDI label set, the data split, the report schema, and how the strong class imbalance is handled.
 
 \subsection{Raw Image Collection}
 
@@ -1191,6 +1198,8 @@ With that in mind, the result is clear. Faster R-CNN is stronger at recognition.
 But the two systems do different jobs. The detector outputs boxes and labels only, and it uses two separate models that do not link which condition sits on which tooth. The VLM produces one structured report that lists each tooth, its condition, and a short comment together. So the Faster R-CNN result is best read as a recognition ceiling for this data. It shows how much accuracy a specialist detector can reach, while the VLM trades some of that accuracy for a readable, report-style output.
 
 \chapter{Discussion and Conclusion}
+
+This chapter interprets the results, states the main limitations and the future work, and closes the thesis.
 
 \section{Discussion}
 
