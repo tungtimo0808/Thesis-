@@ -314,31 +314,24 @@ For each panoramic image, the pipeline creates five image views:
 
 \begin{figure}[H]
     \centering
-    \definecolor{cblue}{HTML}{2F6DB0}
-    \definecolor{cgreen}{HTML}{3AA856}
-    \definecolor{corange}{HTML}{E08E0B}
-    \definecolor{cpurple}{HTML}{6A4C9C}
-    \definecolor{cmagenta}{HTML}{B0338C}
     \resizebox{\textwidth}{!}{%
     \begin{tikzpicture}[
-        stage/.style={rounded corners=4pt, align=center, text=white,
-                      text width=2.7cm, minimum height=2cm, font=\small,
-                      drop shadow={shadow xshift=0.6pt, shadow yshift=-0.8pt, opacity=0.3}},
-        arr/.style={-{Stealth[length=3.5mm]}, line width=1.4pt, black!45},
-        node distance=0.8cm,
+        stage/.style={draw, rounded corners, align=center,
+                      text width=2.7cm, minimum height=2cm, font=\small},
+        >=Stealth, node distance=0.8cm,
     ]
-        \node[stage, fill=cblue]                  (d1) {\textbf{PAN924 data}\\[3pt]{\scriptsize images and\\JSON annotations}};
-        \node[stage, fill=cgreen,  right=of d1]   (d2) {\textbf{Clean labels}\\[3pt]{\scriptsize FDI number\\and condition}};
-        \node[stage, fill=corange, right=of d2]   (d3) {\textbf{Create five views}\\[3pt]{\scriptsize full image and\\four regional crops}};
-        \node[stage, fill=cpurple, right=of d3]   (d4) {\textbf{Build samples}\\[3pt]{\scriptsize prompt, JSON answer,\\image path}};
-        \node[stage, fill=cmagenta, right=of d4]  (d5) {\textbf{Export data}\\[3pt]{\scriptsize VLM JSONL\\and COCO}};
-        \draw[arr] (d1) -- (d2);
-        \draw[arr] (d2) -- (d3);
-        \draw[arr] (d3) -- (d4);
-        \draw[arr] (d4) -- (d5);
+        \node[stage]               (d1) {\textbf{PAN924 data}\\[3pt]{\scriptsize images and\\JSON annotations}};
+        \node[stage, right=of d1]  (d2) {\textbf{Clean labels}\\[3pt]{\scriptsize FDI number\\and condition}};
+        \node[stage, right=of d2]  (d3) {\textbf{Create five views}\\[3pt]{\scriptsize full image and\\four regional crops}};
+        \node[stage, right=of d3]  (d4) {\textbf{Build samples}\\[3pt]{\scriptsize prompt, JSON answer,\\image path}};
+        \node[stage, right=of d4]  (d5) {\textbf{Export data}\\[3pt]{\scriptsize VLM JSONL\\and COCO}};
+        \draw[->] (d1) -- (d2);
+        \draw[->] (d2) -- (d3);
+        \draw[->] (d3) -- (d4);
+        \draw[->] (d4) -- (d5);
         \node[anchor=west, font=\large\bfseries] (dttl) at ([yshift=1.55cm]d1.north west) {Data Preparation Pipeline};
-        \node[anchor=west, font=\small\color{black!60}] at ([yshift=1.0cm]d1.north west) {From the PAN924 annotations to the training files.};
-        \node[anchor=west, font=\footnotesize\color{black!55}] at ([yshift=-0.85cm]d1.south west) {The same source data is reused for both VLM report generation and Faster R-CNN detection.};
+        \node[anchor=west, font=\small] at ([yshift=1.0cm]d1.north west) {From the PAN924 annotations to the training files.};
+        \node[anchor=west, font=\footnotesize] at ([yshift=-0.85cm]d1.south west) {The same source data is reused for both VLM report generation and Faster R-CNN detection.};
     \end{tikzpicture}}
     \caption{The data-preparation pipeline: raw PAN924 images and annotations are cleaned to FDI numbers and condition labels, expanded into five views, built into report-style samples, and exported into the model input formats.}
     \label{fig:data-pipeline}
@@ -615,31 +608,24 @@ In the first stage, the panoramic image is prepared in the same way as during tr
 
 \begin{figure}[H]
     \centering
-    \definecolor{cblue}{HTML}{2F6DB0}
-    \definecolor{cgreen}{HTML}{3AA856}
-    \definecolor{corange}{HTML}{E08E0B}
-    \definecolor{cpurple}{HTML}{6A4C9C}
-    \definecolor{cmagenta}{HTML}{B0338C}
     \resizebox{\textwidth}{!}{%
     \begin{tikzpicture}[
-        stage/.style={rounded corners=4pt, align=center, text=white,
-                      text width=2.7cm, minimum height=2cm, font=\small,
-                      drop shadow={shadow xshift=0.6pt, shadow yshift=-0.8pt, opacity=0.3}},
-        arr/.style={-{Stealth[length=3.5mm]}, line width=1.4pt, black!45},
-        node distance=0.8cm,
+        stage/.style={draw, rounded corners, align=center,
+                      text width=2.7cm, minimum height=2cm, font=\small},
+        >=Stealth, node distance=0.8cm,
     ]
-        \node[stage, fill=cblue]                  (s1) {\textbf{Panoramic image}\\[3pt]{\scriptsize full view or\\regional crop}};
-        \node[stage, fill=cgreen,  right=of s1]   (s2) {\textbf{Vision encoder}\\[3pt]{\scriptsize ViT $\rightarrow$\\image tokens}};
-        \node[stage, fill=corange, right=of s2]   (s3) {\textbf{Connector}\\[3pt]{\scriptsize MLP into the\\LLM input space}};
-        \node[stage, fill=cpurple, right=of s3]   (s4) {\textbf{Language model}\\[3pt]{\scriptsize reads tokens\\and schema prompt}};
-        \node[stage, fill=cmagenta, right=of s4]  (s5) {\textbf{JSON report}\\[3pt]{\scriptsize parsed into\\tooth findings}};
-        \draw[arr] (s1) -- (s2);
-        \draw[arr] (s2) -- (s3);
-        \draw[arr] (s3) -- (s4);
-        \draw[arr] (s4) -- (s5);
+        \node[stage]               (s1) {\textbf{Panoramic image}\\[3pt]{\scriptsize full view or\\regional crop}};
+        \node[stage, right=of s1]  (s2) {\textbf{Vision encoder}\\[3pt]{\scriptsize ViT $\rightarrow$\\image tokens}};
+        \node[stage, right=of s2]  (s3) {\textbf{Connector}\\[3pt]{\scriptsize MLP into the\\LLM input space}};
+        \node[stage, right=of s3]  (s4) {\textbf{Language model}\\[3pt]{\scriptsize reads tokens\\and schema prompt}};
+        \node[stage, right=of s4]  (s5) {\textbf{JSON report}\\[3pt]{\scriptsize parsed into\\tooth findings}};
+        \draw[->] (s1) -- (s2);
+        \draw[->] (s2) -- (s3);
+        \draw[->] (s3) -- (s4);
+        \draw[->] (s4) -- (s5);
         \node[anchor=west, font=\large\bfseries] (ttl) at ([yshift=1.55cm]s1.north west) {Inference Workflow: From X-ray to Report};
-        \node[anchor=west, font=\small\color{black!60}] at ([yshift=1.0cm]s1.north west) {A trained model turns a panoramic image into a structured report.};
-        \node[anchor=west, font=\footnotesize\color{black!55}] at ([yshift=-0.85cm]s1.south west) {Only the vision encoder, connector and language model change between models; the prompt, schema and parsing stay the same.};
+        \node[anchor=west, font=\small] at ([yshift=1.0cm]s1.north west) {A trained model turns a panoramic image into a structured report.};
+        \node[anchor=west, font=\footnotesize] at ([yshift=-0.85cm]s1.south west) {Only the vision encoder, connector and language model change between models; the prompt, schema and parsing stay the same.};
     \end{tikzpicture}}
     \caption{The report-generation pipeline: image $\rightarrow$ vision encoder $\rightarrow$ connector $\rightarrow$ language model $\rightarrow$ parsed JSON report. The prompt states the JSON schema to return.}
     \label{fig:pipeline}
