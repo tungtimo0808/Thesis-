@@ -247,7 +247,7 @@ Most well-known work in this area still focuses on chest X-rays. Dental panorami
 
 For this thesis, the main lesson from previous work is simple: the model needs data from the target medical domain. A general model may write fluent sentences, but it may still miss dental details. This is why the dataset construction step is important before training or comparing VLMs. The dataset must show the model how dental images, tooth labels, and report text are connected.
  
-\subsection{Vision-Language Models in Dental Radiology}
+\subsection{Vision-Language Models for Medical Reporting}
 Vision-Language Models take an image and a text instruction as input. Then they return a text answer. LLaVA is a clear example of this idea, because it connects a vision encoder with a large language model and uses visual instruction tuning \cite{liu2023visual}. In medicine, VLMs are also studied for report generation and visual question answering \cite{hartsock2024vlmreview}.
 
 This instruction-based setup is useful for dental reporting. The user can ask the model to return a specific structure, such as a list of visible teeth and their conditions. The answer can include both labels and short natural-language comments. This is different from a detector, which normally returns bounding boxes and class labels.
