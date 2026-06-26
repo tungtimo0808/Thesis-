@@ -17,6 +17,8 @@ Run (on the GPU machine, inside the project venv):
 The model is loaded lazily on the first request (about a minute), then reused.
 """
 import base64
+import datetime
+import hashlib
 import os
 import tempfile
 
@@ -53,6 +55,25 @@ FULL_REPORT_PROMPT = (
 # Conditions that are abnormal (shown in a warm colour so they stand out).
 ABNORMAL = {"C", "Te", "Im", "Rr", "M3i", "M3f", "CpuM", "Dc", "Di", "P"}
 
+# A panoramic X-ray is a mirrored view, so the image-space region key maps to the opposite
+# anatomical side. This fallback is only used when a region has no teeth to read the FDI from.
+QUADRANT_OF_KEY = {
+    "image_upper_left": 1,    # patient's upper right (FDI 11-18)
+    "image_upper_right": 2,   # patient's upper left  (FDI 21-28)
+    "image_lower_left": 4,    # patient's lower right (FDI 41-48)
+    "image_lower_right": 3,   # patient's lower left  (FDI 31-38)
+}
+QUADRANT_NAME = {1: "Upper right", 2: "Upper left", 3: "Lower left", 4: "Lower right"}
+
+
+def _quadrant_of(region_key, teeth):
+    """Anatomical quadrant (1-4) of a region, read from the FDI numbers when possible."""
+    digits = [str(t.get("fdi", "")).strip()[:1] for t in teeth]
+    digits = [d for d in digits if d in "1234"]
+    if digits:
+        return int(max(set(digits), key=digits.count))   # the most common quadrant present
+    return QUADRANT_OF_KEY.get(region_key, 9)
+
 app = FastAPI(title="Dental Report Assistant")
 _engine = None   # loaded on first use
 
@@ -82,7 +103,7 @@ def run_model(image_path):
 
 # --------------------------------------------------------------------------- styling
 STYLE = """
-:root{--teal:#0e8a9c;--teal-d:#0b6c7b;--bg:#eef4f6;--card:#ffffff;--ink:#1b2b2f;--muted:#5b7178}
+:root{--teal:#0e8a9c;--teal-d:#0b6c7b;--bg:#eef4f6;--card:#ffffff;--ink:#1b2b2f;--muted:#5b7178;--rule:#d7e3e6}
 *{box-sizing:border-box}
 body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--ink)}
 header{background:linear-gradient(135deg,var(--teal),var(--teal-d));color:#fff;padding:1.1rem 1.4rem;
@@ -90,7 +111,7 @@ header{background:linear-gradient(135deg,var(--teal),var(--teal-d));color:#fff;p
 header .logo{font-size:1.6rem}
 header h1{font-size:1.25rem;margin:0;font-weight:600}
 header .sub{margin-left:auto;font-size:.8rem;opacity:.85}
-.wrap{max-width:980px;margin:1.6rem auto;padding:0 1rem}
+.wrap{max-width:880px;margin:1.6rem auto;padding:0 1rem}
 .card{background:var(--card);border-radius:14px;box-shadow:0 2px 12px rgba(11,108,123,.08);padding:1.4rem;margin-bottom:1.2rem}
 .disclaimer{background:#fff7e6;border-left:4px solid #e0a423;color:#6b5108;padding:.7rem 1rem;border-radius:8px;
   font-size:.9rem;margin-bottom:1.2rem}
@@ -100,21 +121,45 @@ input[type=file]{margin:.6rem 0}
 .btn{background:var(--teal);color:#fff;border:none;border-radius:9px;padding:.7rem 1.5rem;font-size:1rem;
   cursor:pointer;font-weight:600}
 .btn:hover{background:var(--teal-d)}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
-@media(max-width:760px){.grid{grid-template-columns:1fr}}
-.xray{width:100%;border-radius:10px;border:1px solid #d7e3e6}
-h2{font-size:1.05rem;color:var(--teal-d);margin:0 0 .6rem;border-bottom:2px solid #e3eef0;padding-bottom:.3rem}
-.region{margin-bottom:1.1rem}
-.region h3{font-size:.95rem;margin:.2rem 0 .4rem;color:var(--ink)}
-.teeth{display:flex;flex-wrap:wrap;gap:.4rem;margin:.3rem 0}
-.tooth{display:inline-flex;align-items:center;gap:.35rem;border-radius:20px;padding:.2rem .6rem;font-size:.82rem;
-  border:1px solid #dde7ea;background:#f4f8f9}
-.dot{width:.6rem;height:.6rem;border-radius:50%;display:inline-block}
-.fdi{font-weight:700}
-.note{font-size:.85rem;color:var(--muted);font-style:italic;margin:.2rem 0 0}
-.summary{background:#eef6f7;border-left:4px solid var(--teal);padding:.8rem 1rem;border-radius:8px;margin-top:1rem}
-.empty{color:#90a4aa;font-style:italic;font-size:.85rem}
-details{margin-top:1rem}
+
+/* ---- the report sheet (looks like a printed clinical document) ---- */
+.sheet{background:#fff;border:1px solid #e2eaec;border-radius:6px;box-shadow:0 3px 18px rgba(11,108,123,.10);
+  padding:2.4rem 2.6rem;margin-bottom:1.2rem;font-family:Georgia,'Times New Roman',serif;color:#1c2b30}
+@media(max-width:640px){.sheet{padding:1.5rem 1.2rem}}
+.rhead{border-bottom:3px double var(--teal-d);padding-bottom:.9rem;margin-bottom:1.3rem}
+.rtitle{font-size:1.55rem;font-weight:700;letter-spacing:.2px;color:#0b4f5c}
+.rmeta{display:flex;flex-wrap:wrap;gap:.35rem 1.6rem;margin-top:.6rem;font-size:.86rem;color:#3a4d52}
+.rmeta b{color:var(--teal-d);font-weight:700;margin-right:.3rem;font-variant:small-caps;letter-spacing:.3px}
+.xrayfig{margin:0 0 1.4rem;text-align:center}
+.xray{max-width:100%;border:1px solid var(--rule);border-radius:4px}
+.xrayfig figcaption{font-size:.8rem;color:var(--muted);font-style:italic;margin-top:.4rem}
+.sheet h2{font-family:Georgia,'Times New Roman',serif;font-size:1.14rem;color:#0b4f5c;
+  border-bottom:1px solid var(--rule);padding-bottom:.3rem;margin:1.7rem 0 .7rem}
+.region{margin-bottom:1.25rem}
+.region h3{font-size:1rem;margin:1rem 0 .35rem;color:#15333a}
+.qsub{font-weight:400;font-size:.78rem;color:var(--muted);font-variant:small-caps;margin-left:.35rem}
+.finding{margin:.2rem 0 .5rem;line-height:1.55}
+.finding.empty,.empty{color:#90a4aa;font-style:italic}
+.legend{display:flex;flex-wrap:wrap;gap:1.2rem;font-size:.8rem;color:#3a4d52;margin:.1rem 0 .2rem;
+  font-family:system-ui,Arial,sans-serif}
+.legend span{display:inline-flex;align-items:center;gap:.35rem}
+.dot{width:.62rem;height:.62rem;border-radius:50%;display:inline-block}
+.teethtable{border-collapse:collapse;width:100%;margin:.3rem 0 .2rem;font-family:system-ui,Arial,sans-serif;font-size:.86rem}
+.teethtable th,.teethtable td{border:1px solid #e1e9eb;padding:.32rem .7rem;text-align:left}
+.teethtable th{background:#f1f7f8;color:#0b4f5c;font-size:.74rem;text-transform:uppercase;letter-spacing:.4px}
+.teethtable td .dot{margin-right:.45rem;vertical-align:middle}
+.teethtable .fdi{font-weight:700;width:7rem}
+.teethtable tr.abn td{background:#fdf3f2}
+.impression{background:#eef6f7;border-left:4px solid var(--teal);padding:.2rem 1rem 1rem;border-radius:6px;margin-top:1.5rem}
+.impression h2{border:none;margin:.7rem 0 .3rem;padding:0}
+.impression p{margin:.2rem 0;line-height:1.55}
+.signoff{margin-top:1.9rem;border-top:1px solid var(--rule);padding-top:1rem}
+.disc2{font-size:.8rem;color:var(--muted);font-style:italic;margin:0 0 1.7rem}
+.siglines{display:flex;flex-wrap:wrap;gap:1.4rem}
+.siglines>div{flex:1;min-width:9rem;text-align:center}
+.sigline{display:block;border-bottom:1px solid #7c9398;height:1.6rem;margin-bottom:.3rem}
+.siglabel{font-size:.78rem;color:var(--muted);font-variant:small-caps;letter-spacing:.4px}
+details{margin-top:.4rem}
 details summary{cursor:pointer;color:var(--muted);font-size:.85rem}
 pre{background:#0f1f23;color:#cfe8ec;padding:.8rem;border-radius:8px;overflow:auto;font-size:.78rem}
 a.back{display:inline-block;margin-top:1rem;color:var(--teal-d);text-decoration:none;font-weight:600}
@@ -162,40 +207,91 @@ def upload_page():
 
 def results_page(report, image_data_uri, raw_text):
     esc = lambda s: (s or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-    # build the report column
-    blocks = []
+
+    # ---- collect the regions as (quadrant_number, teeth, comment) and order them 1->4
+    sections = []
     regions = report.get("regions") if isinstance(report.get("regions"), dict) else None
     if regions:
-        keys = [k for k in REGION_ORDER if k in regions] + [k for k in regions if k not in REGION_ORDER]
-        items = [(REGION_NAMES.get(k, k), regions[k].get("teeth", []), regions[k].get("comment", ""))
-                 for k in keys]
+        for key, payload in regions.items():
+            payload = payload or {}
+            teeth = payload.get("teeth", []) or []
+            sections.append((_quadrant_of(key, teeth), teeth, payload.get("comment", "")))
     else:
-        items = [(REGION_NAMES.get(report.get("region", ""), "Region"),
-                  report.get("teeth", []), report.get("comment", ""))]
+        teeth = report.get("teeth", []) or []
+        sections.append((_quadrant_of(report.get("region", ""), teeth),
+                         teeth, report.get("comment", "")))
+    sections.sort(key=lambda s: s[0])
 
-    for label, teeth, comment in items:
-        chips = []
-        for t in teeth:
-            code = t.get("condition", "")
-            name = t.get("condition_name") or CONDITION_NAMES.get(code, code)
-            color = _condition_color(code)
-            chips.append(
-                f"<span class='tooth'><span class='dot' style='background:{color}'></span>"
-                f"<span class='fdi'>{esc(str(t.get('fdi','?')))}</span> {esc(name)}</span>"
-            )
-        teeth_html = ("<div class='teeth'>" + "".join(chips) + "</div>") if chips \
-            else "<p class='empty'>No annotated teeth in this region.</p>"
-        note = f"<p class='note'>{esc(comment)}</p>" if comment else ""
-        blocks.append(f"<div class='region'><h3>{esc(label)}</h3>{teeth_html}{note}</div>")
+    # ---- one findings block per quadrant: a narrative line + a tooth table
+    blocks = []
+    for quadrant, teeth, comment in sections:
+        qname = QUADRANT_NAME.get(quadrant, "Other region")
+        finding = (f"<p class='finding'>{esc(comment)}</p>" if comment
+                   else "<p class='finding empty'>No findings recorded for this region.</p>")
+        if teeth:
+            rows = []
+            for t in teeth:
+                code = t.get("condition", "")
+                name = t.get("condition_name") or CONDITION_NAMES.get(code, code)
+                cls = " class='abn'" if code in ABNORMAL else ""
+                rows.append(
+                    f"<tr{cls}><td class='fdi'>{esc(str(t.get('fdi', '?')))}</td>"
+                    f"<td><span class='dot' style='background:{_condition_color(code)}'></span>"
+                    f"{esc(name)}</td></tr>"
+                )
+            table = ("<table class='teethtable'><thead><tr><th>Tooth (FDI)</th>"
+                     "<th>Condition</th></tr></thead><tbody>" + "".join(rows) + "</tbody></table>")
+        else:
+            table = "<p class='empty'>No annotated teeth in this region.</p>"
+        blocks.append(
+            f"<div class='region'><h3>{esc(qname)}<span class='qsub'>quadrant {quadrant}</span></h3>"
+            f"{finding}{table}</div>"
+        )
 
     summary = report.get("summary")
-    summary_html = f"<div class='summary'><strong>Summary.</strong> {esc(summary)}</div>" if summary else ""
+    impression = (f"<div class='impression'><h2>Impression</h2><p>{esc(summary)}</p></div>"
+                  if summary else "")
+
+    legend = (
+        "<div class='legend'>"
+        "<span><span class='dot' style='background:#2e9e5b'></span>Healthy</span>"
+        "<span><span class='dot' style='background:#2f7dd1'></span>Restored</span>"
+        "<span><span class='dot' style='background:#d9534f'></span>Other finding</span>"
+        "</div>"
+    )
+
+    date_str = datetime.date.today().strftime("%d %B %Y")
+    ref = "OPG-" + hashlib.sha1(image_data_uri.encode()).hexdigest()[:6].upper()
 
     body = (
-        "<div class='disclaimer'>Draft report &mdash; must be reviewed by a dentist.</div>"
-        "<div class='grid'>"
-        f"<div class='card'><h2>Panoramic X-ray</h2><img class='xray' src='{image_data_uri}'></div>"
-        f"<div class='card'><h2>Report</h2>{''.join(blocks)}{summary_html}</div>"
+        "<div class='disclaimer'>This is an <strong>AI-generated draft report</strong>. "
+        "A qualified dentist must review and confirm every finding before any clinical use.</div>"
+        "<div class='sheet'>"
+            "<div class='rhead'>"
+                "<div class='rtitle'>Panoramic Radiograph Report</div>"
+                "<div class='rmeta'>"
+                    f"<span><b>Report ID</b>{ref}</span>"
+                    f"<span><b>Date</b>{date_str}</span>"
+                    "<span><b>Modality</b>Panoramic radiograph (OPG)</span>"
+                    "<span><b>Prepared by</b>InternVL3-8B (AI draft)</span>"
+                "</div>"
+            "</div>"
+            f"<figure class='xrayfig'><img class='xray' src='{image_data_uri}'>"
+            "<figcaption>Panoramic radiograph submitted for analysis.</figcaption></figure>"
+            "<h2>Clinical Findings</h2>"
+            + legend
+            + "".join(blocks)
+            + impression
+            + "<div class='signoff'>"
+                "<p class='disc2'>The findings above are generated automatically from the radiograph "
+                "and are limited to the annotated teeth. They do not constitute a clinical diagnosis "
+                "and must be verified by a qualified dentist.</p>"
+                "<div class='siglines'>"
+                    "<div><span class='sigline'></span><span class='siglabel'>Reviewing dentist</span></div>"
+                    "<div><span class='sigline'></span><span class='siglabel'>Signature</span></div>"
+                    "<div><span class='sigline'></span><span class='siglabel'>Date</span></div>"
+                "</div>"
+            "</div>"
         "</div>"
         "<div class='card'><details><summary>Show raw model output (JSON)</summary>"
         f"<pre>{esc(raw_text)}</pre></details>"
