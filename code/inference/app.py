@@ -122,43 +122,27 @@ input[type=file]{margin:.6rem 0}
   cursor:pointer;font-weight:600}
 .btn:hover{background:var(--teal-d)}
 
-/* ---- the report sheet (looks like a printed clinical document) ---- */
-.sheet{background:#fff;border:1px solid #e2eaec;border-radius:6px;box-shadow:0 3px 18px rgba(11,108,123,.10);
-  padding:2.4rem 2.6rem;margin-bottom:1.2rem;font-family:Georgia,'Times New Roman',serif;color:#1c2b30}
-@media(max-width:640px){.sheet{padding:1.5rem 1.2rem}}
-.rhead{border-bottom:3px double var(--teal-d);padding-bottom:.9rem;margin-bottom:1.3rem}
-.rtitle{font-size:1.55rem;font-weight:700;letter-spacing:.2px;color:#0b4f5c}
-.rmeta{display:flex;flex-wrap:wrap;gap:.35rem 1.6rem;margin-top:.6rem;font-size:.86rem;color:#3a4d52}
-.rmeta b{color:var(--teal-d);font-weight:700;margin-right:.3rem;font-variant:small-caps;letter-spacing:.3px}
-.xrayfig{margin:0 0 1.4rem;text-align:center}
-.xray{max-width:100%;border:1px solid var(--rule);border-radius:4px}
-.xrayfig figcaption{font-size:.8rem;color:var(--muted);font-style:italic;margin-top:.4rem}
-.sheet h2{font-family:Georgia,'Times New Roman',serif;font-size:1.14rem;color:#0b4f5c;
-  border-bottom:1px solid var(--rule);padding-bottom:.3rem;margin:1.7rem 0 .7rem}
-.region{margin-bottom:1.25rem}
-.region h3{font-size:1rem;margin:1rem 0 .35rem;color:#15333a}
-.qsub{font-weight:400;font-size:.78rem;color:var(--muted);font-variant:small-caps;margin-left:.35rem}
-.finding{margin:.2rem 0 .5rem;line-height:1.55}
-.finding.empty,.empty{color:#90a4aa;font-style:italic}
-.legend{display:flex;flex-wrap:wrap;gap:1.2rem;font-size:.8rem;color:#3a4d52;margin:.1rem 0 .2rem;
-  font-family:system-ui,Arial,sans-serif}
-.legend span{display:inline-flex;align-items:center;gap:.35rem}
-.dot{width:.62rem;height:.62rem;border-radius:50%;display:inline-block}
-.teethtable{border-collapse:collapse;width:100%;margin:.3rem 0 .2rem;font-family:system-ui,Arial,sans-serif;font-size:.86rem}
-.teethtable th,.teethtable td{border:1px solid #e1e9eb;padding:.32rem .7rem;text-align:left}
-.teethtable th{background:#f1f7f8;color:#0b4f5c;font-size:.74rem;text-transform:uppercase;letter-spacing:.4px}
-.teethtable td .dot{margin-right:.45rem;vertical-align:middle}
-.teethtable .fdi{font-weight:700;width:7rem}
-.teethtable tr.abn td{background:#fdf3f2}
-.impression{background:#eef6f7;border-left:4px solid var(--teal);padding:.2rem 1rem 1rem;border-radius:6px;margin-top:1.5rem}
-.impression h2{border:none;margin:.7rem 0 .3rem;padding:0}
-.impression p{margin:.2rem 0;line-height:1.55}
-.signoff{margin-top:1.9rem;border-top:1px solid var(--rule);padding-top:1rem}
-.disc2{font-size:.8rem;color:var(--muted);font-style:italic;margin:0 0 1.7rem}
-.siglines{display:flex;flex-wrap:wrap;gap:1.4rem}
-.siglines>div{flex:1;min-width:9rem;text-align:center}
-.sigline{display:block;border-bottom:1px solid #7c9398;height:1.6rem;margin-bottom:.3rem}
-.siglabel{font-size:.78rem;color:var(--muted);font-variant:small-caps;letter-spacing:.4px}
+/* ---- results: X-ray on the left, a compact report on the right ---- */
+.wrap.wide{max-width:1040px}
+.grid{display:grid;grid-template-columns:0.95fr 1.05fr;gap:1.2rem;align-items:start}
+@media(max-width:780px){.grid{grid-template-columns:1fr}}
+.xray{width:100%;border-radius:10px;border:1px solid var(--rule)}
+.rmeta{margin-top:.75rem;display:flex;flex-wrap:wrap;gap:.2rem .9rem;font-size:.8rem;color:var(--muted)}
+.rmeta b{color:var(--teal-d);font-weight:700;font-variant:small-caps;letter-spacing:.3px;margin-right:.25rem}
+h2{font-size:1.05rem;color:var(--teal-d);margin:0 0 .7rem;border-bottom:2px solid #e3eef0;padding-bottom:.3rem}
+.region{margin-bottom:.85rem;padding-bottom:.65rem;border-bottom:1px solid #eef3f4}
+.region:last-of-type{border-bottom:none;margin-bottom:.4rem}
+.region h3{font-size:.92rem;margin:.1rem 0 .3rem;color:var(--ink)}
+.qsub{font-weight:400;font-size:.72rem;color:var(--muted);font-variant:small-caps;letter-spacing:.3px;margin-left:.35rem}
+.note{font-size:.88rem;color:#33474c;line-height:1.5;margin:.15rem 0 .4rem}
+.teethlist{list-style:none;display:flex;flex-wrap:wrap;gap:.3rem .9rem;margin:.2rem 0 0;padding:0;font-size:.82rem}
+.teethlist li{display:inline-flex;align-items:center;gap:.35rem;color:#2a3b40}
+.teethlist li.abn{color:#b23b37;font-weight:600}
+.teethlist .fdi{font-weight:700}
+.dot{width:.58rem;height:.58rem;border-radius:50%;display:inline-block;flex:none}
+.impression{background:#eef6f7;border-left:4px solid var(--teal);padding:.7rem .9rem;border-radius:8px;
+  margin-top:1rem;font-size:.9rem;line-height:1.55}
+.empty{color:#90a4aa;font-style:italic;font-size:.85rem}
 details{margin-top:.4rem}
 details summary{cursor:pointer;color:var(--muted);font-size:.85rem}
 pre{background:#0f1f23;color:#cfe8ec;padding:.8rem;border-radius:8px;overflow:auto;font-size:.78rem}
@@ -176,7 +160,7 @@ def _condition_color(code):
     return "#90a4aa"            # unknown = grey
 
 
-def page(body_html, title="Dental Report Assistant"):
+def page(body_html, title="Dental Report Assistant", wrap_class="wrap"):
     return (
         "<!doctype html><html><head><meta charset='utf-8'>"
         "<meta name='viewport' content='width=device-width, initial-scale=1'>"
@@ -184,7 +168,7 @@ def page(body_html, title="Dental Report Assistant"):
         "<header><span class='logo'>&#129463;</span>"
         "<h1>Dental Report Assistant</h1>"
         "<span class='sub'>InternVL3-8B &middot; draft for dentist review</span></header>"
-        f"<div class='wrap'>{body_html}</div></body></html>"
+        f"<div class='{wrap_class}'>{body_html}</div></body></html>"
     )
 
 
@@ -222,43 +206,32 @@ def results_page(report, image_data_uri, raw_text):
                          teeth, report.get("comment", "")))
     sections.sort(key=lambda s: s[0])
 
-    # ---- one findings block per quadrant: a narrative line + a tooth table
+    # ---- one compact findings block per quadrant: a narrative line + a tooth list
     blocks = []
     for quadrant, teeth, comment in sections:
         qname = QUADRANT_NAME.get(quadrant, "Other region")
-        finding = (f"<p class='finding'>{esc(comment)}</p>" if comment
-                   else "<p class='finding empty'>No findings recorded for this region.</p>")
+        note = f"<p class='note'>{esc(comment)}</p>" if comment else ""
         if teeth:
-            rows = []
+            items = []
             for t in teeth:
                 code = t.get("condition", "")
                 name = t.get("condition_name") or CONDITION_NAMES.get(code, code)
                 cls = " class='abn'" if code in ABNORMAL else ""
-                rows.append(
-                    f"<tr{cls}><td class='fdi'>{esc(str(t.get('fdi', '?')))}</td>"
-                    f"<td><span class='dot' style='background:{_condition_color(code)}'></span>"
-                    f"{esc(name)}</td></tr>"
+                items.append(
+                    f"<li{cls}><span class='dot' style='background:{_condition_color(code)}'></span>"
+                    f"<span class='fdi'>{esc(str(t.get('fdi', '?')))}</span> {esc(name)}</li>"
                 )
-            table = ("<table class='teethtable'><thead><tr><th>Tooth (FDI)</th>"
-                     "<th>Condition</th></tr></thead><tbody>" + "".join(rows) + "</tbody></table>")
+            teeth_html = "<ul class='teethlist'>" + "".join(items) + "</ul>"
         else:
-            table = "<p class='empty'>No annotated teeth in this region.</p>"
+            teeth_html = "<p class='empty'>No annotated teeth in this region.</p>"
         blocks.append(
             f"<div class='region'><h3>{esc(qname)}<span class='qsub'>quadrant {quadrant}</span></h3>"
-            f"{finding}{table}</div>"
+            f"{note}{teeth_html}</div>"
         )
 
     summary = report.get("summary")
-    impression = (f"<div class='impression'><h2>Impression</h2><p>{esc(summary)}</p></div>"
+    impression = (f"<div class='impression'><strong>Impression.</strong> {esc(summary)}</div>"
                   if summary else "")
-
-    legend = (
-        "<div class='legend'>"
-        "<span><span class='dot' style='background:#2e9e5b'></span>Healthy</span>"
-        "<span><span class='dot' style='background:#2f7dd1'></span>Restored</span>"
-        "<span><span class='dot' style='background:#d9534f'></span>Other finding</span>"
-        "</div>"
-    )
 
     date_str = datetime.date.today().strftime("%d %B %Y")
     ref = "OPG-" + hashlib.sha1(image_data_uri.encode()).hexdigest()[:6].upper()
@@ -266,38 +239,27 @@ def results_page(report, image_data_uri, raw_text):
     body = (
         "<div class='disclaimer'>This is an <strong>AI-generated draft report</strong>. "
         "A qualified dentist must review and confirm every finding before any clinical use.</div>"
-        "<div class='sheet'>"
-            "<div class='rhead'>"
-                "<div class='rtitle'>Panoramic Radiograph Report</div>"
+        "<div class='grid'>"
+            "<div class='card'>"
+                "<h2>Panoramic X-ray</h2>"
+                f"<img class='xray' src='{image_data_uri}'>"
                 "<div class='rmeta'>"
                     f"<span><b>Report ID</b>{ref}</span>"
                     f"<span><b>Date</b>{date_str}</span>"
-                    "<span><b>Modality</b>Panoramic radiograph (OPG)</span>"
-                    "<span><b>Prepared by</b>InternVL3-8B (AI draft)</span>"
+                    "<span><b>Modality</b>OPG</span>"
                 "</div>"
             "</div>"
-            f"<figure class='xrayfig'><img class='xray' src='{image_data_uri}'>"
-            "<figcaption>Panoramic radiograph submitted for analysis.</figcaption></figure>"
-            "<h2>Clinical Findings</h2>"
-            + legend
-            + "".join(blocks)
-            + impression
-            + "<div class='signoff'>"
-                "<p class='disc2'>The findings above are generated automatically from the radiograph "
-                "and are limited to the annotated teeth. They do not constitute a clinical diagnosis "
-                "and must be verified by a qualified dentist.</p>"
-                "<div class='siglines'>"
-                    "<div><span class='sigline'></span><span class='siglabel'>Reviewing dentist</span></div>"
-                    "<div><span class='sigline'></span><span class='siglabel'>Signature</span></div>"
-                    "<div><span class='sigline'></span><span class='siglabel'>Date</span></div>"
-                "</div>"
-            "</div>"
+            "<div class='card'>"
+                "<h2>Report</h2>"
+                + "".join(blocks)
+                + impression
+            + "</div>"
         "</div>"
         "<div class='card'><details><summary>Show raw model output (JSON)</summary>"
         f"<pre>{esc(raw_text)}</pre></details>"
         "<a class='back' href='/'>&larr; Analyze another image</a></div>"
     )
-    return page(body)
+    return page(body, wrap_class="wrap wide")
 
 
 # --------------------------------------------------------------------------- routes

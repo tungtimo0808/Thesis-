@@ -1237,14 +1237,12 @@ A few limitations should be kept in mind when reading these results.
     \item \textbf{Report text.} The training comments and summaries are built from the ground-truth labels with fixed templates. They are readable, but they are not written by a dentist, and they add no finding beyond the labels.
     \item \textbf{Single data source.} All images come from one dataset (PAN924, 924 images). The results may not transfer to images from other clinics or machines.
     \item \textbf{No expert review.} The reports are scored against the label-based gold report, not judged by a dentist, so a clinical-quality check is still missing.
-    \item \textbf{Indicative detector comparison.} The Faster R-CNN baseline uses a different split and an IoU-based match, so that comparison is indicative, not a controlled head-to-head.
     \item \textbf{4-bit training.} The models are trained in 4-bit QLoRA on a single GPU. Full-precision training might gain a little, but it was not affordable on this hardware.
 \end{itemize}
 
 Several directions follow from these limitations.
 
 \begin{itemize}
-    \item \textbf{Detector--VLM hybrid.} The Faster R-CNN baseline is much stronger at recognition. A natural next step is to let a detector find the teeth and their conditions, and let the VLM turn that output into the report text. This keeps the recognition accuracy of a detector and the readable output of a VLM.
     \item \textbf{Better rare-class handling.} Stronger methods, such as a focal loss, harder oversampling, or a detect-then-describe two-stage design, could raise the rare-condition scores.
     \item \textbf{Higher detail for small lesions.} Caries and similar small findings may need a higher input resolution or a lesion-focused crop.
     \item \textbf{More and broader data.} A larger, multi-source dataset, with expert review of the generated reports, would make the evaluation stronger and the model more general.
@@ -1257,7 +1255,7 @@ This thesis studied whether vision-language models can produce a first-draft den
 
 The main findings are consistent. InternVL3-8B is the best model, with PaliGemma~2 a close second, which shows that the vision encoder matters more than the parameter count. Detection of the teeth is easy for every model, while naming the condition is the hard part, and the rare conditions, especially caries, stay the open problem. The zero-shot baseline shows that almost all of this ability comes from the fine-tuning, not from the base model. The Faster R-CNN baseline reaches a higher recognition score, while the vision-language models add the readable, structured report that a detector cannot produce.
 
-The overall answer is therefore cautious but positive. Vision-language models can already produce a useful first-draft dental report for the common findings, but the report still needs a dentist to check it, and the rare-condition recognition needs more work. The clearest next step is a detector--VLM hybrid that keeps the recognition strength of a detector and the report-writing strength of a vision-language model.
+The overall answer is therefore cautious but positive. Vision-language models can already produce a useful first-draft dental report for the common findings, but the report still needs a dentist to check it, and the rare-condition recognition needs more work. The clearest next step is to strengthen the rare-condition recognition, through stronger class-imbalance methods, higher input detail for the small lesions, and a larger, multi-source dataset with expert review.
 
 % --- Appendix starts ---
 \appendix
