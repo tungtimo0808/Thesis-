@@ -969,11 +969,11 @@ Table~\ref{tab:results-recognition} reports the recognition metrics, and Table~\
 \cmidrule(lr){2-4}\cmidrule(lr){5-6}\cmidrule(lr){7-7}
 Model & Precision & Recall & F1 & Macro F1 & Micro F1 & Tooth acc. \\
 \midrule
-Qwen2.5-VL-7B      & \textbf{0.779} & 0.846 & 0.811 & 0.152 & 0.537 & 0.452 \\
+Qwen2.5-VL-7B      & \textbf{0.779} & 0.846 & 0.811 & 0.151 & 0.537 & 0.452 \\
 Qwen2.5-VL-3B      & 0.765 & 0.891 & 0.823 & 0.139 & 0.553 & 0.470 \\
 InternVL3-8B       & 0.776 & 0.892 & \textbf{0.830} & \textbf{0.189} & \textbf{0.607} & \textbf{0.519} \\
 Phi-3.5-vision     & 0.721 & 0.895 & 0.799 & 0.102 & 0.461 & 0.383 \\
-PaliGemma~2 (3B)   & 0.768 & \textbf{0.901} & 0.830 & 0.174 & 0.606 & 0.518 \\
+PaliGemma~2 (3B)   & 0.768 & \textbf{0.901} & 0.829 & 0.174 & 0.606 & 0.518 \\
 \bottomrule
 \end{tabular}
 \end{adjustbox}
@@ -990,14 +990,14 @@ Model & Hallucination & Miss rate & Exact report & ROUGE-L & Valid JSON (\%) \\
 \midrule
 Qwen2.5-VL-7B      & \textbf{0.221} & 0.154 & 0.125 & 0.654 & 100 \\
 Qwen2.5-VL-3B      & 0.235 & 0.109 & 0.120 & 0.663 & 100 \\
-InternVL3-8B       & 0.224 & 0.108 & 0.133 & 0.696 & 100 \\
+InternVL3-8B       & 0.224 & 0.108 & 0.133 & 0.695 & 100 \\
 Phi-3.5-vision     & 0.279 & 0.105 & 0.127 & 0.603 & 99.6 \\
-PaliGemma~2 (3B)   & 0.232 & \textbf{0.099} & \textbf{0.136} & \textbf{0.697} & 100 \\
+PaliGemma~2 (3B)   & 0.232 & \textbf{0.099} & \textbf{0.135} & \textbf{0.697} & 100 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The recognition results split into two clear levels. InternVL3-8B is the best model overall. It has the highest macro F1 (0.189), micro F1 (0.607), and tooth accuracy (0.519). PaliGemma~2 follows very closely, even though it is the smallest model and uses a fixed 448-pixel input. Qwen2.5-VL comes next, and Phi-3.5-vision is last on every recognition metric.
+The recognition results split into two clear levels. InternVL3-8B is the best model overall. It has the highest macro F1 (0.189), micro F1 (0.607), and tooth accuracy (0.519). PaliGemma~2 follows very closely, even though it is the smallest model and uses a fixed 448-pixel input. Qwen2.5-VL comes next, and Phi-3.5-vision is the weakest, last on the headline recognition metrics (FDI precision and F1, macro and micro F1, and tooth accuracy).
 
 There are two main points here. First, model size is not the main factor. PaliGemma~2 (about 3B) almost matches InternVL3 (about 8B), and the 3B Qwen is close to the 7B Qwen, even slightly higher on micro F1 and tooth accuracy. So a larger model is not automatically better on this task. Second, the FDI detection F1 is high for every model (0.80 to 0.83), but the tooth accuracy is much lower (0.38 to 0.52). This gap means the hard part is not finding the teeth, but naming the correct condition.
 
@@ -1028,11 +1028,11 @@ The numbers above are for the fine-tuned models. To show how much the fine-tunin
 \toprule
 Model & Setting & Valid JSON (\%) & FDI F1 & Micro F1 & Macro F1 & Tooth acc. & ROUGE-L \\
 \midrule
-\multirow{2}{*}{InternVL3-8B}  & zero-shot base & 93.3 & 0.020 & 0.000 & 0.000 & 0.000 & 0.087 \\
-                               & fine-tuned     & 100  & \textbf{0.830} & \textbf{0.607} & \textbf{0.189} & \textbf{0.519} & \textbf{0.696} \\
+\multirow{2}{*}{InternVL3-8B}  & zero-shot base & 93.3 & 0.019 & 0.000 & 0.000 & 0.000 & 0.087 \\
+                               & fine-tuned     & 100  & \textbf{0.830} & \textbf{0.607} & \textbf{0.189} & \textbf{0.519} & \textbf{0.695} \\
 \midrule
 \multirow{2}{*}{Qwen2.5-VL-7B} & zero-shot base & 100  & 0.077 & 0.000 & 0.000 & 0.000 & 0.100 \\
-                               & fine-tuned     & 100  & \textbf{0.811} & \textbf{0.537} & \textbf{0.152} & \textbf{0.452} & \textbf{0.654} \\
+                               & fine-tuned     & 100  & \textbf{0.811} & \textbf{0.537} & \textbf{0.151} & \textbf{0.452} & \textbf{0.654} \\
 \bottomrule
 \end{tabular}
 \end{adjustbox}
@@ -1216,7 +1216,7 @@ The best model is InternVL3-8B. It leads on macro F1, micro F1, and tooth accura
 
 This leads to the first conclusion: model size is not the main factor here. The 3B PaliGemma~2 matches the 8B InternVL3, and the 3B Qwen matches or slightly beats the 7B Qwen. The 7B Qwen only has a small edge on macro F1, which means it handles the rare conditions a little better. For a small, structured task like this one, the extra parameters of a larger model are mostly wasted. The architecture and the encoder matter more than the parameter count.
 
-The vision encoder is the most likely reason for the ranking. InternVL3 uses InternViT-300M, and PaliGemma~2 uses SigLIP-So400m. Both are strong vision encoders trained on very large image data, and PaliGemma~2 is also pretrained on grounded tasks such as detection and captioning. These two models take the first and second place. Phi-3.5-vision uses an older CLIP ViT-L/14 encoder, and it is last on every metric. The two Qwen models sit in the middle and score almost the same, which again shows that the language-model size is not the bottleneck. So on this task, the quality of the vision encoder, not the parameter count, explains most of the difference between the models.
+The vision encoder is the most likely reason for the ranking. InternVL3 uses InternViT-300M, and PaliGemma~2 uses SigLIP-So400m. Both are strong vision encoders trained on very large image data, and PaliGemma~2 is also pretrained on grounded tasks such as detection and captioning. These two models take the first and second place. Phi-3.5-vision uses an older CLIP ViT-L/14 encoder, and it is the weakest model on the headline recognition metrics. The two Qwen models sit in the middle and score almost the same, which again shows that the language-model size is not the bottleneck. So on this task, the quality of the vision encoder, not the parameter count, explains most of the difference between the models.
 
 The second conclusion is about where the models fail. Detection is not the problem. Every model finds the teeth with an FDI F1 of about 0.80 to 0.83. The problem is the condition. The tooth accuracy drops to 0.38 to 0.52, and the macro F1 stays near 0.10 to 0.19. The main error type is therefore a wrong or missing condition, not an invented tooth. The confusion analysis confirms this: a rare condition is usually predicted as healthy or restored, the two common classes.
 
