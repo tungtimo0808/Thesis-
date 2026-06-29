@@ -219,7 +219,7 @@ I would like to express my sincere thanks to my supervisor, Nghiem Thi Phuong, f
 
 Panoramic dental X-ray images are widely used in dental clinics. A single image can show the teeth, jaw area, and several dental conditions. In practice, the dentist not only reads the image, but also writes the findings into a clear report.
 
-This thesis studies Vision-Language Models (VLMs) for dental report generation from panoramic X-ray images. The goal is not to replace dentists. The generated report is treated as a first draft. A trained dentist still needs to check the image, edit the report, and make the final clinical decision.
+This thesis studies Vision Language Models (VLMs) for dental report generation from panoramic X-ray images. The goal is not to replace dentists. The generated report is treated as a first draft. A trained dentist still needs to check the image, edit the report, and make the final clinical decision.
 
 The work starts from data construction. A PAN924-based instruction dataset is built from ground-truth annotations \cite{inredd_pan924_2025}. Each sample keeps the tooth FDI number, the dental condition label, and the image path. Short clinical comments and summaries are then added for report-style training. Each panoramic image is prepared in five views: one full image and four regional crops. This design keeps both the full mouth context and clearer regional tooth details.
 
@@ -227,7 +227,7 @@ The dataset is first kept in a common format. It is then converted into the inpu
 
 Each model is then fine-tuned on the same data with the same settings, so the comparison stays fair. The models are large and the training hardware is a single 24~GB GPU (an NVIDIA L4), so they are adapted with QLoRA, which keeps the base weights in 4-bit and trains only small low-rank adapters. The dental conditions are very unbalanced, so two techniques are used together to support the rare conditions: the rare-condition samples are oversampled in the training data, and the loss is given extra weight on the tokens that name a rare condition. The models are then evaluated on a held-out test set with one shared script that reports tooth detection, condition classification, and report-text quality.
 
-The contributions of this work are therefore a reusable PAN924-based report dataset and a controlled comparison of five vision-language models on dental report generation. A Faster R-CNN detector is also trained as a recognition baseline. It shows how a specialist detector compares with the VLMs on tooth detection and condition recognition, while the VLMs add the report text that a detector cannot produce.
+The contributions of this work are therefore a reusable PAN924-based report dataset and a controlled comparison of five vision language models on dental report generation. A Faster R-CNN detector is also trained as a recognition baseline. It shows how a specialist detector compares with the VLMs on tooth detection and condition recognition, while the VLMs add the report text that a detector cannot produce.
  
 
 \vspace{1cm}
@@ -258,7 +258,7 @@ This report writing step is important, but it is also repetitive. Many dental re
 
 This thesis starts from that practical problem. The aim is to prepare a first draft of a dental report from an OPG image. The output should not be used as a final diagnosis by itself. It is only a support result, and a dentist must still review it. This point is important because medical images can be difficult to interpret, and final clinical decisions require professional responsibility.
 
-The recent progress of Vision-Language Models (VLMs) makes this direction possible. A VLM can take an image together with a text instruction and produce a text answer. This is useful for report generation because the expected output is not only a class label. The model may need to list teeth, describe conditions, and write a short summary.
+The recent progress of Vision Language Models (VLMs) makes this direction possible. A VLM can take an image together with a text instruction and produce a text answer. This is useful for report generation because the expected output is not only a class label. The model may need to list teeth, describe conditions, and write a short summary.
 
 At the same time, object detection models such as Faster R-CNN remain strong for localizing objects in images. For this reason, a fair comparison between VLM-style outputs and Faster R-CNN based outputs is also useful.
 
@@ -276,7 +276,7 @@ The last problem is report text. The original PAN924 annotations contain useful 
 
 
 \section{Objectives}
-The aim of this work is to study whether vision-language models can produce a useful first-draft dental report from a panoramic X-ray, and to compare several of them under the same conditions. The work covers the full path from the raw annotations to the trained models and the measured results.
+The aim of this work is to study whether vision language models can produce a useful first-draft dental report from a panoramic X-ray, and to compare several of them under the same conditions. The work covers the full path from the raw annotations to the trained models and the measured results.
 
 The specific objectives are:
 
@@ -294,7 +294,7 @@ These objectives keep the project realistic at bachelor level. The focus is a re
 
 \section{Literature Review}
 
-This section reviews three lines of related work: generating reports from medical images, vision-language models for medical reporting, and detection on dental panoramic X-rays.
+This section reviews three lines of related work: generating reports from medical images, vision language models for medical reporting, and detection on dental panoramic X-rays.
 
 \subsection{Medical Image Report Generation}
 Medical image report generation has been studied for several years. Many systems use an image encoder and a text decoder. The image encoder reads visual features from the image. The text decoder then generates a report. This design is similar to image captioning, but the medical setting is stricter. The report needs to mention clinically useful findings, not just describe visible objects.
@@ -305,8 +305,8 @@ Most well-known work in this area still focuses on chest X-rays. Dental panorami
 
 For this thesis, the main lesson from previous work is simple: the model needs data from the target medical domain. A general model may write fluent sentences, but it may still miss dental details. This is why the dataset construction step is important before training or comparing VLMs. The dataset must show the model how dental images, tooth labels, and report text are connected.
  
-\subsection{Vision-Language Models for Medical Reporting}
-Vision-Language Models take an image and a text instruction as input, and return a text answer. This instruction-following ability has been applied in medicine, for report generation and visual question answering \cite{hartsock2024vlmreview}. In dentistry, the direction is very recent. Liu et al. tested GPT-4o, a large proprietary VLM of undisclosed size, on panoramic radiographs, asking it to report common dental conditions at specific teeth using the FDI and Universal numbering systems \cite{liu2025dentalvlm}. It handled some conditions well, such as dental implants and restorations, but failed on small lesions, scoring zero F1 on caries. That study used a single closed model in a zero-shot way on fifty images. This thesis differs: it fine-tunes several open models, compares them under one fixed setup, and generates a full structured report rather than only flagging conditions.
+\subsection{Vision Language Models for Medical Reporting}
+Vision Language Models take an image and a text instruction as input, and return a text answer. This instruction-following ability has been applied in medicine, for report generation and visual question answering \cite{hartsock2024vlmreview}. In dentistry, the direction is very recent. Liu et al. tested GPT-4o, a large proprietary VLM of undisclosed size, on panoramic radiographs, asking it to report common dental conditions at specific teeth using the FDI and Universal numbering systems \cite{liu2025dentalvlm}. It handled some conditions well, such as dental implants and restorations, but failed on small lesions, scoring zero F1 on caries. That study used a single closed model in a zero-shot way on fifty images. This thesis differs: it fine-tunes several open models, compares them under one fixed setup, and generates a full structured report rather than only flagging conditions.
 
 This instruction-based setup is useful for dental reporting. The user can ask the model to return a specific structure, such as a list of visible teeth and their conditions. The answer can include both labels and short natural-language comments. This is different from a detector, which normally returns bounding boxes and class labels.
 
@@ -331,7 +331,7 @@ The rest of this report is organised as follows:
 \begin{itemize}
 \item Chapter~1 (Introduction) introduces the research background, motivation, objectives, scope, and overall structure of the thesis.
 
-\item Chapter~2 (Materials and Methods) covers the PAN924 source data, the five-view design, the label set, class imbalance handling, the five vision-language models, the report-generation pipeline, and LoRA/QLoRA adaptation.
+\item Chapter~2 (Materials and Methods) covers the PAN924 source data, the five-view design, the label set, class imbalance handling, the five vision language models, the report-generation pipeline, and LoRA/QLoRA adaptation.
 
 \item Chapter~3 (Experimental Setup) presents the training environment, the shared model settings, the best-checkpoint selection strategy, and the evaluation metrics.
 
@@ -725,13 +725,13 @@ Three more practical reasons guided this choice. First, all five are well-known 
 
 \subsection{Shared Architecture}
 
-All five models follow the same basic design, even though the details differ. A vision-language model has three parts. The first part is a vision encoder. It is usually a Vision Transformer (ViT). It reads the image and turns it into a sequence of image tokens. The second part is a connector, often a small multi-layer perceptron (MLP). It maps the image tokens into the same space that the language model uses for words. The third part is a language model. It reads the image tokens and the text prompt together, and then writes the answer one token at a time.
+All five models follow the same basic design, even though the details differ. A vision language model has three parts. The first part is a vision encoder. It is usually a Vision Transformer (ViT). It reads the image and turns it into a sequence of image tokens. The second part is a connector, often a small multi-layer perceptron (MLP). It maps the image tokens into the same space that the language model uses for words. The third part is a language model. It reads the image tokens and the text prompt together, and then writes the answer one token at a time.
 
 The main differences between the five models are: which vision encoder they use, which language model they use, how large they are, and how they handle a high-resolution image. Table~\ref{tab:vlm-summary} compares the five models on these points.
 
 \begin{table}[H]
 \centering
-\caption{The five candidate vision-language models}
+\caption{The five candidate vision language models}
 \label{tab:vlm-summary}
 \begin{tabular}{lllll}
 \toprule
@@ -898,7 +898,7 @@ This same method is used for all five models. The exact values, such as the rank
 
 Oversampling (Section~\ref{sec:materials}) helps, but it has a clear limit. Every report, even one that contains a rare implant, is still mostly made of healthy and restored teeth. When a rare-condition report is repeated, those common teeth are repeated with it. As a result, the rare-to-common ratio only improves so far, and the rarest conditions are still a small share of the training signal.
 
-The second technique works directly on the loss instead of the data. A vision-language model is trained with token-level cross-entropy: at each position it is penalised by how wrong its predicted next token is, and every token counts the same. The condition codes that name a rare disease, such as \texttt{Dc} or \texttt{Rr}, are only a tiny fraction of all the tokens in a report, so getting them wrong barely changes the average loss. The model can reach a low loss while still labelling almost every tooth as healthy or restored.
+The second technique works directly on the loss instead of the data. A vision language model is trained with token-level cross-entropy: at each position it is penalised by how wrong its predicted next token is, and every token counts the same. The condition codes that name a rare disease, such as \texttt{Dc} or \texttt{Rr}, are only a tiny fraction of all the tokens in a report, so getting them wrong barely changes the average loss. The model can reach a low loss while still labelling almost every tooth as healthy or restored.
 
 To counter this, the loss on the tokens that spell a rare condition code is multiplied by a fixed weight (here, three), while every other token keeps a weight of one. The rare codes are the same five used earlier: \texttt{Dc}, \texttt{Im}, \texttt{P}, \texttt{Rr}, and \texttt{M3f}. In practice, the token ids that are distinctive to these codes are read from each model's tokenizer once, with the ids shared with the common codes \texttt{H} and \texttt{R} (such as quotes and colons) removed, and the training loss is scaled up whenever the target token is one of them. The penalty for mislabelling a rare tooth is now three times larger, so the model can no longer ignore these conditions cheaply.
 
@@ -1299,7 +1299,7 @@ The Faster R-CNN baseline in Section~\ref{sec:frcnn-compare} shows that this is 
 
 The zero-shot baseline in Section~\ref{sec:zeroshot} points the same way from the other side. Without fine-tuning, the same base models score near zero on recognition, so the ability measured in this work is produced by the fine-tuning on the dental data, not by the base model or the prompt alone.
 
-These results fit the goal of the thesis. The output is meant to be a first draft, not a final diagnosis. As a first draft, the models are useful for the common findings: they find most teeth and read healthy and restored teeth fairly well. They are not yet reliable for the rare conditions, and caries is a clear weak point. For this reason, the generated report still needs a dentist to check it, especially for the rare and the small findings. The work shows that vision-language models can produce a structured dental report, but it also shows that the rare-condition recognition is the open problem for future work.
+These results fit the goal of the thesis. The output is meant to be a first draft, not a final diagnosis. As a first draft, the models are useful for the common findings: they find most teeth and read healthy and restored teeth fairly well. They are not yet reliable for the rare conditions, and caries is a clear weak point. For this reason, the generated report still needs a dentist to check it, especially for the rare and the small findings. The work shows that vision language models can produce a structured dental report, but it also shows that the rare-condition recognition is the open problem for future work.
 
 \section{Limitations and Future Work}
 
@@ -1324,11 +1324,11 @@ Several directions follow from these limitations.
 
 \section{Conclusion}
 
-This thesis studied whether vision-language models can produce a first-draft dental report from a panoramic X-ray. It built a reusable PAN924-based instruction dataset, with five views per image and report-style targets, fine-tuned five vision-language models with one shared QLoRA recipe, and evaluated them with a single script and against a Faster R-CNN recognition baseline.
+This thesis studied whether vision language models can produce a first-draft dental report from a panoramic X-ray. It built a reusable PAN924-based instruction dataset, with five views per image and report-style targets, fine-tuned five vision language models with one shared QLoRA recipe, and evaluated them with a single script and against a Faster R-CNN recognition baseline.
 
-The main findings are consistent. InternVL3-8B is the best model, with PaliGemma~2 a close second, which suggests that the architecture and the visual pretraining may matter at least as much as the parameter count. Tooth detection is easier than naming the condition for every model: the condition is the hard part, the rare conditions remain difficult, and caries is a separate small-lesion failure case. The zero-shot baseline shows that almost all of this ability comes from the fine-tuning, not from the base model. The Faster R-CNN baseline reaches a higher recognition score, while the vision-language models add the readable, structured report that a detector cannot produce.
+The main findings are consistent. InternVL3-8B is the best model, with PaliGemma~2 a close second, which suggests that the architecture and the visual pretraining may matter at least as much as the parameter count. Tooth detection is easier than naming the condition for every model: the condition is the hard part, the rare conditions remain difficult, and caries is a separate small-lesion failure case. The zero-shot baseline shows that almost all of this ability comes from the fine-tuning, not from the base model. The Faster R-CNN baseline reaches a higher recognition score, while the vision language models add the readable, structured report that a detector cannot produce.
 
-The overall answer is therefore cautious but positive. Vision-language models can already produce a useful first-draft dental report for the common findings, but the report still needs a dentist to check it, and the rare-condition recognition needs more work. The clearest next step is to strengthen the rare-condition recognition, through stronger class-imbalance methods, higher input detail for the small lesions, and a larger, multi-source dataset with expert review.
+The overall answer is therefore cautious but positive. Vision language models can already produce a useful first-draft dental report for the common findings, but the report still needs a dentist to check it, and the rare-condition recognition needs more work. The clearest next step is to strengthen the rare-condition recognition, through stronger class-imbalance methods, higher input detail for the small lesions, and a larger, multi-source dataset with expert review.
 
 % --- Appendix starts ---
 \appendix
