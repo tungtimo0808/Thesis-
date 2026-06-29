@@ -179,7 +179,7 @@ Working place: & Information and Communication Technology \\
 \vspace{1cm}
 
 \noindent
-I hereby agree with the quality of Internship thesis for student Nguyen Hoang Tung. This report is qualified for the graduation thesis defense.
+I hereby agree with the quality of this Bachelor thesis for student Nguyen Hoang Tung. This report is qualified for the graduation thesis defense.
 
 \vspace{1cm}
 
@@ -1287,7 +1287,7 @@ The results give a clear picture of what works on this task and what does not.
 
 The best model is InternVL3-8B. It leads on macro F1, micro F1, and tooth accuracy, and it has a clean output with 100\% valid JSON. PaliGemma~2 is the close second, and this is the most interesting result. PaliGemma~2 is the smallest model in the set, about 3B, and it uses a fixed 448-pixel image. Yet it almost matches an 8B model, and it has the lowest miss rate and the highest ROUGE-L. So for this task, a careful smaller model is enough, and a fixed image size is not a real handicap.
 
-This leads to the first conclusion: model size is not the main factor here. The 3B PaliGemma~2 matches the 8B InternVL3, and the 3B Qwen matches or slightly beats the 7B Qwen. The 7B Qwen only has a small edge on macro F1, which means it handles the rare conditions a little better. For a small, structured task like this one, the extra parameters of a larger model are mostly wasted. The architecture and the encoder matter more than the parameter count.
+This leads to the first conclusion: model size is not the main factor here. The 3B PaliGemma~2 matches the 8B InternVL3, and the 3B Qwen matches or slightly beats the 7B Qwen. The 7B Qwen only has a small edge on macro F1, which means it handles the rare conditions a little better. In this controlled setup, increasing the language-model size alone did not consistently improve performance. The architecture and the visual pretraining appear to matter at least as much as the parameter count.
 
 The vision encoder is the most likely reason for the ranking. InternVL3 uses InternViT-300M, and PaliGemma~2 uses SigLIP-So400m. Both are strong vision encoders trained on very large image data, and PaliGemma~2 is also pretrained on grounded tasks such as detection and captioning. These two models take the first and second place. Phi-3.5-vision uses an older CLIP ViT-L/14 encoder, and it is the weakest model on the headline recognition metrics. The two Qwen models sit in the middle and score almost the same, which again shows that the language-model size is not the bottleneck. So on this task, the quality of the vision encoder, more than the parameter count, seems to explain much of the difference between the models. This is a correlation across five models, not an isolated test of the encoder, because the models also differ in their checkpoints, pretraining, and image handling.
 
@@ -1295,7 +1295,7 @@ The second conclusion is about where the models fail. Tooth detection is easier 
 
 The third conclusion is about the class imbalance. The two techniques, oversampling and rare-token loss weighting, do help. They keep several rare conditions above zero and stop the model from labelling every tooth as healthy. But the help is limited. The rarest conditions, crown destruction and residual root, stay near zero, and even caries, which is not rare, is almost never read correctly. This weak point is not unique to this work: a 2025 study reported that even GPT-4o, a much larger proprietary VLM, scored zero F1 on caries on panoramic radiographs \cite{liu2025dentalvlm}, which suggests that caries is hard for current VLMs at this image scale. The handling also has a cost: the model now over-predicts the conditions it was pushed to learn, such as developing third molar. So the imbalance is reduced but not solved.
 
-The Faster R-CNN baseline in Section~\ref{sec:frcnn-compare} shows that this is not only a data limit. A specialist detector reaches a much higher rare-condition score on the same data. So a large part of the gap comes from the report-generation approach itself, where the rare codes are weak in the token-level loss, and not only from the class imbalance.
+The Faster R-CNN baseline in Section~\ref{sec:frcnn-compare} shows that this is not only a data limit. A specialist detector reaches a much higher rare-condition score on the same PAN924 source data, although on a different test split and with a different matching rule. So a large part of the gap comes from the report-generation approach itself, where the rare codes are weak in the token-level loss, and not only from the class imbalance.
 
 The zero-shot baseline in Section~\ref{sec:zeroshot} points the same way from the other side. Without fine-tuning, the same base models score near zero on recognition, so the ability measured in this work is produced by the fine-tuning on the dental data, not by the base model or the prompt alone.
 
