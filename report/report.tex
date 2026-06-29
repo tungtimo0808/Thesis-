@@ -14,6 +14,8 @@
 \usepackage{array}
 \usepackage{booktabs}
 \usepackage{makecell}
+\usepackage{tabularx}
+\usepackage{array}
 \usepackage{float}
 \usepackage{tocloft}
 \usepackage[colorlinks=true, linkcolor=black, citecolor=black, urlcolor=black]{hyperref}
@@ -118,7 +120,7 @@
     
     % --- Assignment Title ---
     \vspace{0.5cm} % khoảng cách trước Labwork I
-    {\LARGE \textbf{VISION LANGUAGE MODELS}}\\
+    {\LARGE \textbf{VISION-LANGUAGE MODELS}}\\
     \vspace{0.5cm}
     {\LARGE \textbf{FOR AUTOMATIC  }}\\
     \vspace{0.5cm}
@@ -130,20 +132,23 @@
 \vspace{0.5cm}
 \noindent
 \begin{center}
-
-    \begin{tabular}{@{}l@{\hspace{3cm}}l@{}}
-  \textbf{Student Name} & \textbf{Student ID} \\[0.6cm]
-  Nguyen Hoang Tung     & 22BA13388           \\
-  
-    \end{tabular}
-
+{\large
+\renewcommand{\arraystretch}{1.6}
+\begin{tabular}{@{}l@{\hspace{2.5cm}}l@{}}
+\textbf{Student Name} & Nguyen Hoang Tung \\
+\textbf{Student ID}   & 22BA13318 \\
+\textbf{Supervisor}   & Nghiem Thi Phuong \
+\end{tabular}
+}
 \end{center}
+
+
 
 \vfill
 
 % --- Footer ---
 \begin{center}
-    \textit{Hanoi, June 2026}
+    \textit{Hanoi, July 2026}
 \end{center}
 \newpage
 \newpage
@@ -151,9 +156,59 @@
 \setcounter{page}{1}
 
 
+\newpage
+\thispagestyle{empty}
+
+\begin{center}
+    \textbf{\large SUPERVISOR'S APPROVAL FOR BACHELOR THESIS}
+\end{center}
+
+\vspace{1.8cm}
+
+\noindent
+\renewcommand{\arraystretch}{1.6}
+\begin{tabularx}{\textwidth}{@{}>{\bfseries}p{5.2cm}X@{}}
+Topic: & Vision language models for automatic dental report generation \\
+Specialty: & Data Science \\
+Student's full name: & Nguyen Hoang Tung \\
+Student's ID No: & 22BA13318 \\
+Supervisor's full name: & Nghiem Thi Phuong \\
+Working place: & Information and Communication Technology \\
+\end{tabularx}
+
+\vspace{1cm}
+
+\noindent
+I hereby agree with the quality of Internship thesis for student Nguyen Hoang Tung. This report is qualified for the graduation thesis defense.
+
+\vspace{1cm}
+
+\begin{flushright}
+Hanoi, \ldots\ldots\ldots July, 2026
+\end{flushright}
+
+\noindent
+\hfill
+\makebox[5cm][center]{\textbf{Supervisor}}
+
+\vspace{3cm}
+
+\begin{flushright}
+(Signature and full name)
+\end{flushright}
 
 
 
+
+
+
+
+
+
+\chapter*{Acknowledgements}
+\addcontentsline{toc}{chapter}{Acknowledgements}
+I would like to express my sincere thanks to my supervisor, Nghiem Thi Phuong, for her guidance throughout this thesis. From the early planning to the final writing, she gave clear advice, asked the right questions, and helped me keep the work focused and realistic. Her feedback shaped both the direction of the project and the way the results are presented, and she was patient whenever I needed to rethink an idea or fix a mistake. I am very grateful for the time, encouragement, and support she gave at every stage of this work.
+\newpage
 
 
 
@@ -189,10 +244,7 @@ The contributions of this work are therefore a reusable PAN924-based report data
 \listoftables
 \newpage
 
-\chapter*{Acknowledgements}
-\addcontentsline{toc}{chapter}{Acknowledgements}
-I would like to express my sincere thanks to my supervisor, Nghiem Thi Phuong, for her guidance throughout this thesis. From the early planning to the final writing, she gave clear advice, asked the right questions, and helped me keep the work focused and realistic. Her feedback shaped both the direction of the project and the way the results are presented, and she was patient whenever I needed to rethink an idea or fix a mistake. I am very grateful for the time, encouragement, and support she gave at every stage of this work.
-\newpage
+
 
 \pagenumbering{arabic}
 \setcounter{page}{1}
@@ -210,8 +262,7 @@ The recent progress of Vision-Language Models (VLMs) makes this direction possib
 
 At the same time, object detection models such as Faster R-CNN remain strong for localizing objects in images. For this reason, a fair comparison between VLM-style outputs and Faster R-CNN based outputs is also useful.
 
-The title uses ``Vision Language Models'' in plural because the work is not limited to one model. The data pipeline is prepared so that different VLMs can be trained or tested on the same task. Their results can later be compared with Faster R-CNN based models. Therefore, the thesis is not only about producing one final text output. It also studies whether VLMs are useful for dental image understanding and structured report generation.
-
+The title uses ``Vision Language Models'' in plural because the work is not limited to one model. The data pipeline is prepared so that different VLMs can be trained or tested on the same task. Their results can later be compared with Faster R-CNN based models. Therefore, the thesis is not only about producing one final text output. 
 \section{Problem Statement}
 A panoramic dental image contains many small details. A single OPG can include up to 32 teeth. Each tooth may have a different condition, such as caries, restoration, implant, residual root, or impacted third molar. The model must deal with both image-level information and tooth-level information. This makes the task harder than a simple image classification problem.
 
@@ -274,7 +325,23 @@ However, a detection model does not naturally write a clinical report. It can sa
 Because of that, Faster R-CNN is useful as a comparison point. This work compares the VLM outputs with Faster R-CNN based results in Chapter~4. The comparison focuses on tooth-level correctness and condition labels. This helps separate two questions: whether the model recognizes the dental findings, and whether it can express them in a useful report format.
 
 \section{Report Structure}
-The rest of this report is organised as follows. Chapter~2 (Materials and Methods) covers the data and the methods together. The first half describes the PAN924 source data, the five-view design, the label set, and how the strong class imbalance is handled. The second half describes the five vision-language models, the full report-generation pipeline, and how each model is adapted with LoRA and QLoRA. Chapter~3 (Experimental Setup) gives the training environment, the exact settings shared by every model, the way the best checkpoint is selected, and the evaluation metrics. Chapter~4 (Results) reports the per-model scores, a zero-shot baseline without fine-tuning, the per-condition and per-tooth analysis, and a comparison with a Faster R-CNN recognition baseline. Chapter~5 (Discussion and Conclusion) interprets the results, lists the limitations and future work, and closes the thesis. The appendix lists the prompt templates, and the References close the report.
+
+The rest of this report is organised as follows:
+
+\begin{itemize}
+\item Chapter~1 (Introduction) introduces the research background, motivation, objectives, scope, and overall structure of the thesis.
+
+\item Chapter~2 (Materials and Methods) covers the PAN924 source data, the five-view design, the label set, class imbalance handling, the five vision-language models, the report-generation pipeline, and LoRA/QLoRA adaptation.
+
+\item Chapter~3 (Experimental Setup) presents the training environment, the shared model settings, the best-checkpoint selection strategy, and the evaluation metrics.
+
+\item Chapter~4 (Results) reports the per-model scores, the zero-shot baseline, the per-condition and per-tooth analysis, and the comparison with a Faster R-CNN recognition baseline.
+
+\item Chapter~5 (Discussion and Conclusion) interprets the findings, discusses limitations and future work, and concludes the thesis.
+
+\item The appendix lists the prompt templates, and the References close the report.
+
+\end{itemize}
 
 
 \chapter{Materials and Methods}
@@ -293,14 +360,14 @@ The raw data comes from the PAN924 panoramic dental X-ray dataset \cite{inredd_p
 \begin{figure}[H]
     \centering
     % Upload the annotated example image as annotated_example.png
-    \includegraphics[width=\textwidth]{annotated_example.png}
+    \includegraphics[width=0.8\textwidth]{annotated_example.png}
     \caption{An annotated panoramic image from PAN924. Each tooth has an oriented bounding box and its FDI number. In the VLM dataset, each tooth is reduced to its FDI number and condition label.}
     \label{fig:annotated-example}
 \end{figure}
 
 The original images are stored in the \texttt{images/} folder. The main annotation file is \texttt{annotations/dataset\_final\_v2.json}. This file is used as the source for the VLM dataset. No new disease labels are created by hand in this step. The labels come from the existing ground-truth annotation file.
 
-The first script in the pipeline is \texttt{build\_5view\_common\_dataset.py}. It reads the original annotations, loads the source images, and builds the common training data. This common dataset is the main dataset of the thesis. The model-specific datasets are created from it later.
+The first script in the pipeline is \texttt{build\_5view\_common\_dataset.py}. It reads the original annotations, loads the source images, and builds the common training data. This common dataset is the main dataset of the thesis. The model-specific datasets are created from it later. Figure~\ref{fig:data-pipeline} summarises the full data-preparation pipeline.
 
 For each panoramic image, the pipeline creates five image views:
 
@@ -411,7 +478,7 @@ Second digit & Tooth name \\
 
 Reading an FDI number is simple. The two digits are read one by one, not as a single number. For example, tooth 36 is read as ``three, six''. The first digit 3 is the lower-left quadrant. The second digit 6 is the first molar. So tooth 36 is the lower-left first molar. In the same way, tooth 11 is the upper-right central incisor, and tooth 48 is the lower-right wisdom tooth.
 
-A full adult mouth has 32 teeth, 8 in each quadrant. Many patients do not have all 32. Wisdom teeth (position 8) are often missing, already removed, or still under the gum. This is one reason why some FDI numbers appear less often in the dataset.
+A full adult mouth has 32 teeth, 8 in each quadrant. Many patients do not have all 32. Wisdom teeth (position 8) are often missing, already removed, or still under the gum. This is one reason why some FDI numbers appear less often in the dataset. Figure~\ref{fig:fdi} shows the four quadrants and the numbering.
 
 \begin{figure}[H]
     \centering
@@ -466,7 +533,7 @@ Task & Image input & Target output \\
 \end{tabular}
 \end{table}
 
-
+\newpage
 \subsection{Clinical Text Generation from Ground-Truth Labels}
 
 The report text is generated from the annotation labels. No external AI model or API is used in this step. This is important because the dataset should not add new findings that are not in the original annotations.
@@ -501,28 +568,32 @@ The common dataset is stored in \texttt{vlm\_report\_dataset/common/}. This fold
 
 The dataset uses 12 condition codes after label cleaning. Some rare or overlapping labels are remapped before the files are written. For example, \texttt{Ri}, \texttt{RiM}, and \texttt{TeM} are mapped to \texttt{Te}. The label \texttt{I} is mapped to \texttt{M3i}. This keeps the label set easier to handle during training and evaluation.
 
+
 \begin{table}[H]
 \centering
-\caption{Dental condition labels used in the final dataset}
-\begin{tabular}{ll}
+\caption{Dental condition labels and counts after merging into 12 classes}
+\renewcommand{\arraystretch}{1}
+\begin{tabular}{@{}l r p{7cm}@{}}
 \toprule
-Code & Condition name \\
+\textbf{Code} & \textbf{Count} & \textbf{Meaning} \\
 \midrule
-\texttt{H} & healthy \\
-\texttt{C} & caries \\
-\texttt{R} & restored \\
-\texttt{Te} & endodontic treatment \\
-\texttt{Im} & implant \\
-\texttt{Rr} & residual root \\
-\texttt{M3i} & impacted third molar \\
-\texttt{M3f} & developing third molar \\
-\texttt{CpuM} & prosthetic crown \\
-\texttt{Dc} & crown destruction \\
-\texttt{Di} & incisal or occlusal wear \\
-\texttt{P} & pontic \\
+\texttt{H}    & 10,665 & Healthy \\
+\texttt{R}    & 6,481  & Restored tooth/filling or crown \\
+\texttt{Te}   & 869    & Endodontically treated tooth \\
+\texttt{C}    & 399    & Suspected caries \\
+\texttt{CpuM} & 384    & Mixed prosthetic crown \\
+\texttt{Di}   & 312    & Incisal or occlusal wear \\
+\texttt{M3i}  & 304    & Impacted third molar \\
+\texttt{M3f}  & 192    & Developing third molar \\
+\texttt{Rr}   & 141    & Residual root \\
+\texttt{P}    & 127    & Pontic \\
+\texttt{Im}   & 90     & Implant \\
+\texttt{Dc}   & 69     & Crown destruction \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+
 
 
 \minisection{Class imbalance in the training data}
@@ -537,6 +608,7 @@ The first technique oversamples the rare-condition training rows with the script
 
 Only the four regional crop rows are repeated, never the full panoramic report rows. The reason is signal density. A regional crop contains about 11 annotated teeth on average, while a full report contains about 21. If a crop contains one implant, that implant makes up roughly 1/11 of the answer. In a full report, the same implant makes up only 1/21. So repeating a crop gives a stronger learning signal for the rare condition, because the rare finding takes up a larger part of the answer.
 
+\newpage
 \minisection{The multiplier formula}
 
 Each rare condition receives a copy multiplier based on its prevalence in the regional training crops. Let $p_c$ be the fraction of training crop rows that contain at least one instance of condition $c$, and let $p_{\min}$ be the smallest $p_c$ among the five rare conditions. The multiplier for condition $c$ is:
@@ -548,7 +620,7 @@ m(c) = \min\!\left(8,\; \frac{p_{\min}}{p_c} \times 8\right)
 
 This formula has three properties. First, the rarest condition always gets the highest multiplier of 8. Second, a less rare condition gets a smaller multiplier. Third, after oversampling, all five rare conditions appear at roughly the same rate in the training set.
 
-Image-level prevalence ($p_c$) is used rather than raw tooth count. One patient can have multiple implants, so using tooth count gives extra weight to patients who happen to have many instances. Prevalence counts each patient once and is a cleaner measure of how common the condition is across the patient population.
+Crop-level prevalence ($p_c$) is used rather than raw tooth count. One crop can contain several implants, so using the tooth count would give extra weight to crops that happen to have many instances. Prevalence counts each crop once and is a cleaner measure of how common the condition is across the regional crops.
 
 \minisection{Why the cap is 8}
 
@@ -574,6 +646,7 @@ Code & Condition & Multiplier & Teeth before & Teeth after \\
 \end{tabular}
 \end{table}
 
+\newpage
 After balancing, the training split grows from 3695 to 5817 rows. This is about 57\% more rows. The validation and test splits do not change. Table~\ref{tab:balance-rows} shows the sample counts.
 
 \begin{table}[H]
@@ -604,7 +677,7 @@ The methods cover four things: the pipeline that turns an image into a report, t
 
 This subsection describes how a trained model turns a panoramic X-ray into a report at inference time. The pipeline has four stages, and Figure~\ref{fig:pipeline} shows them end to end.
 
-In the first stage, the panoramic image is prepared in the same way as during training. The full image is used for the full-report task, and the four regional crops are used for the regional-report task, with the crop boundaries computed from the tooth positions as described in Section~\ref{sec:materials}. In the second stage, the image is passed through the vision encoder, which turns it into a sequence of image tokens, and a small connector maps those tokens into the language model's input space. In the third stage, the language model reads the image tokens together with the text prompt, which states the image type and the exact JSON schema to return, and it writes the answer one token at a time. In the fourth stage, the generated text is parsed as JSON, and the tooth list, the condition codes, and the short comments are read out. The same parsed structure is what the evaluation script compares against the gold report.
+In the first stage, the panoramic image is prepared in the same way as during training. The full image is used for the full-report task, and the four regional crops are used for the regional-report task, with the crop boundaries computed from the tooth positions as described in Section~\ref{sec:materials}. These crop boundaries come from the annotations, so they are used to build the dataset and to run the evaluation, where the gold tooth positions are available. For a genuinely new image with no annotations, the system uses the full-image report instead, as the web interface in Section~\ref{sec:interface} does. In the second stage, the image is passed through the vision encoder, which turns it into a sequence of image tokens, and a small connector maps those tokens into the language model's input space. In the third stage, the language model reads the image tokens together with the text prompt, which states the image type and the exact JSON schema to return, and it writes the answer one token at a time. In the fourth stage, the generated text is parsed as JSON, and the tooth list, the condition codes, and the short comments are read out. The same parsed structure is what the evaluation script compares against the gold report.
 
 \begin{figure}[H]
     \centering
@@ -677,11 +750,11 @@ A high-resolution panoramic X-ray matters here. The teeth are small and close to
 
 \subsection{The Five Models}
 
-Each model is described in short below. The checkpoint name is the exact version used in this project, and the citation points to its paper or model card. The figures show the architecture of each model.
+Each model is described in short below. The checkpoint name is the exact version used in this project, and the citation points to its paper or model card. The following figures show representative architectures.
 
 \minisection{Qwen2.5-VL-7B-Instruct (Alibaba)}
 
-Checkpoint: \texttt{Qwen/Qwen2.5-VL-7B-Instruct} \cite{qwen25vl2025}. Its vision encoder is a ViT with native dynamic resolution, so the image is not forced to a fixed size and small details are kept. The language model is the Qwen2.5 decoder (about 7B). This is the strongest general model in the set.
+Checkpoint: \texttt{Qwen/Qwen2.5-VL-7B-Instruct} \cite{qwen25vl2025}. Its vision encoder is a ViT with native dynamic resolution, so the image is not forced to a fixed size and small details are kept. The language model is the Qwen2.5 decoder (about 7B). It is the larger of the two Qwen2.5-VL variants used in this study.
 
 \begin{figure}[H]
     \centering
@@ -706,9 +779,10 @@ Checkpoint: \texttt{Qwen/Qwen2.5-VL-7B-Instruct} \cite{qwen25vl2025}. Its vision
 
 Checkpoint: \texttt{Qwen/Qwen2.5-VL-3B-Instruct} \cite{qwen25vl2025}. This is the smaller version of the same Qwen2.5-VL family. It keeps the native dynamic-resolution ViT, but pairs it with a smaller Qwen2.5 language model (about 3B). It is included for one reason: to measure the effect of model size. Because it shares the architecture of the 7B model, a direct 7B-versus-3B comparison shows whether the extra parameters are worth the higher cost on this task. The architecture is the same as in Figure~\ref{fig:qwen-arch}, only the language model is smaller.
 
+
 \minisection{InternVL3-8B (OpenGVLab)}
 
-Checkpoint: \texttt{OpenGVLab/InternVL3-8B} \cite{zhu2025internvl3}. It follows a ViT--MLP--LLM design, with an InternViT-300M encoder and a Qwen2.5 language model (about 7B). It cuts a large image into 448-pixel tiles and uses a pixel unshuffle step to keep the token count low, which helps with tiny findings.
+Checkpoint: \texttt{OpenGVLab/InternVL3-8B} \cite{zhu2025internvl3}. It follows a ViT--MLP--LLM design, with an InternViT-300M encoder and a Qwen2.5 language model (about 7B). It cuts a large image into 448-pixel tiles and uses a pixel unshuffle step to keep the token count low, which helps with tiny findings. Figure~\ref{fig:internvl-arch} shows its architecture.
 
 \begin{figure}[H]
     \centering
@@ -737,7 +811,7 @@ Checkpoint: \texttt{microsoft/Phi-3.5-vision-instruct} \cite{abdin2024phi3}. It 
 
 \minisection{PaliGemma~2 (3B, 448px) (Google)}
 
-Checkpoint: \texttt{google/paligemma2-3b-pt-448} \cite{steiner2024paligemma2}. It uses a SigLIP-So400m encoder, a single linear projection, and a Gemma~2 language model (about 2B), for about 3B in total. It differs from the others in two ways: it uses a fixed 448-pixel image size, and it is a prefix-LM, where the image and the prompt attend to each other freely. It is a gated model, so its license must be accepted before download.
+Checkpoint: \texttt{google/paligemma2-3b-pt-448} \cite{steiner2024paligemma2}. It uses a SigLIP-So400m encoder, a single linear projection, and a Gemma~2 language model (about 2B), for about 3B in total. It differs from the others in two ways: it uses a fixed 448-pixel image size, and it is a prefix-LM, where the image and the prompt attend to each other freely. It is a gated model, so its license must be accepted before download. Figure~\ref{fig:paligemma-arch} shows its architecture.
 
 \begin{figure}[H]
     \centering
@@ -776,7 +850,7 @@ h = Wx + \frac{\alpha}{r}\, BAx
 \label{eq:lora}
 \end{equation}
 
-The matrix $W$ stays frozen, and only $A$ and $B$ are trained. The term $\alpha/r$ is a fixed scaling factor that sets how strong the update is. Because $r$ is small, $A$ and $B$ together hold far fewer numbers than $W$. This drops the trainable weights from billions to only a few million.
+The matrix $W$ stays frozen, and only $A$ and $B$ are trained. The term $\alpha/r$ is a fixed scaling factor that sets how strong the update is. Because $r$ is small, $A$ and $B$ together hold far fewer numbers than $W$. This drops the trainable weights from billions to only a few million. Figure~\ref{fig:qlora-arch} illustrates this low-rank update.
 
 \begin{figure}[H]
     \centering
@@ -826,7 +900,7 @@ Oversampling (Section~\ref{sec:materials}) helps, but it has a clear limit. Ever
 
 The second technique works directly on the loss instead of the data. A vision-language model is trained with token-level cross-entropy: at each position it is penalised by how wrong its predicted next token is, and every token counts the same. The condition codes that name a rare disease, such as \texttt{Dc} or \texttt{Rr}, are only a tiny fraction of all the tokens in a report, so getting them wrong barely changes the average loss. The model can reach a low loss while still labelling almost every tooth as healthy or restored.
 
-To counter this, the loss on the tokens that spell a rare condition code is multiplied by a fixed weight (here, three), while every other token keeps a weight of one. The rare codes are the same five used earlier: \texttt{Dc}, \texttt{Im}, \texttt{P}, \texttt{Rr}, and \texttt{M3f}. In practice, the token ids that make up these codes are read from each model's tokenizer once, and the training loss is scaled up whenever the target token is one of them. The penalty for mislabelling a rare tooth is now three times larger, so the model can no longer ignore these conditions cheaply.
+To counter this, the loss on the tokens that spell a rare condition code is multiplied by a fixed weight (here, three), while every other token keeps a weight of one. The rare codes are the same five used earlier: \texttt{Dc}, \texttt{Im}, \texttt{P}, \texttt{Rr}, and \texttt{M3f}. In practice, the token ids that are distinctive to these codes are read from each model's tokenizer once, with the ids shared with the common codes \texttt{H} and \texttt{R} (such as quotes and colons) removed, and the training loss is scaled up whenever the target token is one of them. The penalty for mislabelling a rare tooth is now three times larger, so the model can no longer ignore these conditions cheaply.
 
 The two techniques are complementary. Oversampling increases how often a rare condition is seen, and the loss weighting increases how much each rare token matters when it is seen. Both are used together for every model, and both leave the validation and test data untouched, so the reported scores still reflect the true class distribution.
 
@@ -855,7 +929,7 @@ The models are adapted with QLoRA, and how LoRA and QLoRA work is explained in S
 \minisection{LoRA rank and alpha}
 
 The rank is set to 8. A lower rank means fewer trainable parameters and less risk of overfitting on a small dataset. Rank 8 is a common choice for 7B models. It is large enough to learn the task, but still small. The alpha is set to 32. In the LoRA update, the added weights are scaled by $\alpha / r$, which is $32 / 8 = 4$ here. This factor sets how strongly the update changes the output. A value of 4 gives a clear learning signal without changing the frozen weights too much.
-
+\newpage
 \minisection{Why the vision encoder is frozen}
 
 Each VLM has a vision encoder (a ViT-based model) that converts the input image into feature vectors. This encoder is already pretrained on a huge amount of image data, so its features are good. The dental set has only a few thousand training views. That is too small to retrain the encoder safely, and training it could harm its general features. So it is kept frozen. Only the language-side adapter learns to read the dental features, which is more stable.
@@ -897,7 +971,7 @@ Random seed             & 924 \\
 
 \section{Checkpoint Selection}
 
-A checkpoint is saved every 100 steps, and the last checkpoint is not always the best one, because a model can start to overfit near the end of training. The validation loss is recorded at every save point, so the checkpoint with the lowest validation loss is selected for the final test. This selection is cheap, because the validation loss is already computed during training and needs no extra generation. The chosen checkpoint is the only one run on the test set.
+A checkpoint is saved every 100 steps, and the last checkpoint is not always the best one. The validation loss is recorded at every save point, so the checkpoint with the lowest validation loss is selected for the final test. This selection is cheap, because the validation loss is already computed during training and needs no extra generation. The chosen checkpoint is the only one run on the test set.
 
 \section{Evaluation Metrics}
 
@@ -925,7 +999,7 @@ Generation     & The share of outputs that are valid JSON, and the ROUGE-L score
 \end{tabular}
 \end{table}
 
-These metrics cover both parts of the task. The detection and classification metrics show if the model finds the correct dental findings. The generation metrics show if the output is valid and readable. The detection and classification metrics can also be used for the Faster R-CNN baseline, so the recognition part can be compared on the same ground.
+These metrics cover both parts of the task. The detection and classification metrics show if the model finds the correct dental findings. The generation metrics show if the output is valid and readable. The detection and classification metrics can also be used for the Faster R-CNN baseline, so the recognition part can be compared with it as an indicative reference.
 
 \minisection{ROUGE-L}
 
@@ -1046,7 +1120,7 @@ The reading is clear: for this structured dental task, almost all of the measure
 
 \section{Per-Condition Results}
 
-Table~\ref{tab:results-percond} reports the per-condition F1 for every model. The support column is the number of test teeth for each condition, and it is the same for all models because it comes from the gold labels. The five rare conditions (\texttt{Dc}, \texttt{Im}, \texttt{P}, \texttt{Rr}, \texttt{M3f}) are the ones most affected by the class imbalance, so they are the most important rows to read.
+Table~\ref{tab:results-percond} reports the per-condition F1 for every model. The support column is the number of tooth instances across all test report rows, including the full-image and the regional-view samples, so one tooth can be counted more than once. It is the same for all models because it comes from the gold labels. The five rare conditions (\texttt{Dc}, \texttt{Im}, \texttt{P}, \texttt{Rr}, \texttt{M3f}) are the ones most affected by the class imbalance, so they are the most important rows to read.
 
 \begin{table}[H]
 \centering
@@ -1187,20 +1261,19 @@ The comparison must be read with care, because the two systems are not measured 
 With that in mind, the result is clear. Faster R-CNN is stronger at recognition. It detects teeth better (FDI F1 0.885 against 0.830), and it classifies the condition far better (macro F1 0.601 against 0.189). The gap is largest on the rare conditions, which the detector keeps well above zero while the VLM often drops to zero. This fits the design of the two systems. The detector treats every tooth as an equal target with a clean box-level signal, so a rare condition is not washed out. The VLM is trained with a token-level loss, where a rare condition code is only a few tokens in a long report, so the rare signal stays weak.
 
 But the two systems do different jobs. The detector outputs boxes and labels only, and it uses two separate models that do not link which condition sits on which tooth. The VLM produces one structured report that lists each tooth, its condition, and a short comment together. So the Faster R-CNN result is best read as a recognition ceiling for this data. It shows how much accuracy a specialist detector can reach, while the VLM trades some of that accuracy for a readable, report-style output.
-
+\newpage
 \section{Web Interface for Report Generation}
 \label{sec:interface}
 
-This last section adds no new measurement. It shows how the best model is packaged into a small tool, so the structured report can be produced from an image without running any script by hand. The interface is a thin layer on top of the same model and the same prompt used in the experiments; it does not change anything that was measured above.
+This last section adds no new measurement. It only shows how the best model is packaged into a small web tool, allowing a structured report to be produced from an image without manually running scripts. The interface uses the same model and prompt as in the experiments, so it does not change any result reported above.
 
-The tool is a web application built with FastAPI. The user uploads a panoramic X-ray, the application runs the fine-tuned InternVL3-8B model with the full-report prompt from Appendix~\ref{app:prompts}, and the model returns the same JSON report used in the evaluation. The raw output therefore stays measurable and identical in form to the test predictions. The application then turns that JSON into a readable page: each region is listed with its teeth in FDI notation, the condition of each tooth is shown with a colour cue (healthy, restored, or abnormal), and the short comments and summary are kept as plain text. The original JSON is still available behind a toggle, so the structured output can be checked directly.
+The tool is built with FastAPI. After a panoramic X-ray is uploaded, the application runs the fine-tuned InternVL3-8B model with the full-report prompt from Appendix~\ref{app:prompts} and returns the same JSON report format used in the evaluation. This JSON output remains available for direct inspection, while the interface also converts it into a readable page where regions, teeth in FDI notation, conditions, comments, and the summary are displayed clearly with simple colour cues. Figure~\ref{fig:interface} shows the result page for one image.
 
-Figure~\ref{fig:interface} shows the result page for one panoramic image. The page is intentionally simple and keeps a clear warning at the top: the output is a draft, and a qualified dentist must review and confirm every finding before any clinical use. This matches the framing of the whole thesis, where the generated report is a first draft and not a final diagnosis.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth]{interface.png}
-    \caption{The web interface for report generation. The uploaded panoramic X-ray is shown on the left, and the report produced by the fine-tuned InternVL3-8B model is rendered on the right: each tooth is listed by its FDI number with a colour-coded condition, followed by the region comments and the overall summary. A warning makes clear that the report is a draft for dentist review.}
+    \includegraphics[width=1\textwidth]{interface.png}
+    \caption{The web interface for report generation.}
     \label{fig:interface}
 \end{figure}
 
@@ -1216,9 +1289,9 @@ The best model is InternVL3-8B. It leads on macro F1, micro F1, and tooth accura
 
 This leads to the first conclusion: model size is not the main factor here. The 3B PaliGemma~2 matches the 8B InternVL3, and the 3B Qwen matches or slightly beats the 7B Qwen. The 7B Qwen only has a small edge on macro F1, which means it handles the rare conditions a little better. For a small, structured task like this one, the extra parameters of a larger model are mostly wasted. The architecture and the encoder matter more than the parameter count.
 
-The vision encoder is the most likely reason for the ranking. InternVL3 uses InternViT-300M, and PaliGemma~2 uses SigLIP-So400m. Both are strong vision encoders trained on very large image data, and PaliGemma~2 is also pretrained on grounded tasks such as detection and captioning. These two models take the first and second place. Phi-3.5-vision uses an older CLIP ViT-L/14 encoder, and it is the weakest model on the headline recognition metrics. The two Qwen models sit in the middle and score almost the same, which again shows that the language-model size is not the bottleneck. So on this task, the quality of the vision encoder, not the parameter count, explains most of the difference between the models.
+The vision encoder is the most likely reason for the ranking. InternVL3 uses InternViT-300M, and PaliGemma~2 uses SigLIP-So400m. Both are strong vision encoders trained on very large image data, and PaliGemma~2 is also pretrained on grounded tasks such as detection and captioning. These two models take the first and second place. Phi-3.5-vision uses an older CLIP ViT-L/14 encoder, and it is the weakest model on the headline recognition metrics. The two Qwen models sit in the middle and score almost the same, which again shows that the language-model size is not the bottleneck. So on this task, the quality of the vision encoder, more than the parameter count, seems to explain much of the difference between the models. This is a correlation across five models, not an isolated test of the encoder, because the models also differ in their checkpoints, pretraining, and image handling.
 
-The second conclusion is about where the models fail. Detection is not the problem. Every model finds the teeth with an FDI F1 of about 0.80 to 0.83. The problem is the condition. The tooth accuracy drops to 0.38 to 0.52, and the macro F1 stays near 0.10 to 0.19. The main error type is therefore a wrong or missing condition, not an invented tooth. The confusion analysis confirms this: a rare condition is usually predicted as healthy or restored, the two common classes.
+The second conclusion is about where the models fail. Tooth detection is easier than condition classification. Every model finds the teeth with an FDI F1 of about 0.80 to 0.83. The problem is the condition. The tooth accuracy drops to 0.38 to 0.52, and the macro F1 stays near 0.10 to 0.19. The main error type is therefore a wrong or missing condition, not an invented tooth. The confusion analysis confirms this: a rare condition is usually predicted as healthy or restored, the two common classes.
 
 The third conclusion is about the class imbalance. The two techniques, oversampling and rare-token loss weighting, do help. They keep several rare conditions above zero and stop the model from labelling every tooth as healthy. But the help is limited. The rarest conditions, crown destruction and residual root, stay near zero, and even caries, which is not rare, is almost never read correctly. This weak point is not unique to this work: a 2025 study reported that even GPT-4o, a much larger proprietary VLM, scored zero F1 on caries on panoramic radiographs \cite{liu2025dentalvlm}, which suggests that caries is hard for current VLMs at this image scale. The handling also has a cost: the model now over-predicts the conditions it was pushed to learn, such as developing third molar. So the imbalance is reduced but not solved.
 
@@ -1253,7 +1326,7 @@ Several directions follow from these limitations.
 
 This thesis studied whether vision-language models can produce a first-draft dental report from a panoramic X-ray. It built a reusable PAN924-based instruction dataset, with five views per image and report-style targets, fine-tuned five vision-language models with one shared QLoRA recipe, and evaluated them with a single script and against a Faster R-CNN recognition baseline.
 
-The main findings are consistent. InternVL3-8B is the best model, with PaliGemma~2 a close second, which shows that the vision encoder matters more than the parameter count. Detection of the teeth is easy for every model, while naming the condition is the hard part, and the rare conditions, especially caries, stay the open problem. The zero-shot baseline shows that almost all of this ability comes from the fine-tuning, not from the base model. The Faster R-CNN baseline reaches a higher recognition score, while the vision-language models add the readable, structured report that a detector cannot produce.
+The main findings are consistent. InternVL3-8B is the best model, with PaliGemma~2 a close second, which suggests that the architecture and the visual pretraining may matter at least as much as the parameter count. Tooth detection is easier than naming the condition for every model: the condition is the hard part, the rare conditions remain difficult, and caries is a separate small-lesion failure case. The zero-shot baseline shows that almost all of this ability comes from the fine-tuning, not from the base model. The Faster R-CNN baseline reaches a higher recognition score, while the vision-language models add the readable, structured report that a detector cannot produce.
 
 The overall answer is therefore cautious but positive. Vision-language models can already produce a useful first-draft dental report for the common findings, but the report still needs a dentist to check it, and the rare-condition recognition needs more work. The clearest next step is to strengthen the rare-condition recognition, through stronger class-imbalance methods, higher input detail for the small lesions, and a larger, multi-source dataset with expert review.
 
