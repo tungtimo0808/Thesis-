@@ -21,6 +21,7 @@ import datetime
 import hashlib
 import os
 import tempfile
+import threading
 
 os.environ.setdefault("MAX_PIXELS", "401408")   # InternVL3 reads this; matches training
 os.environ.setdefault("USE_HF", "1")            # download from Hugging Face, not ModelScope
@@ -29,7 +30,7 @@ from fastapi import FastAPI, UploadFile, File
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import HTMLResponse
 
-from render_report import parse_prediction, CONDITION_NAMES, REGION_NAMES, REGION_ORDER
+from render_report import parse_full_prediction, parse_error, CONDITION_NAMES, REGION_NAMES, REGION_ORDER
 
 
 # --------------------------------------------------------------------------- model config
@@ -44,6 +45,9 @@ FULL_REPORT_PROMPT = (
     "image_lower_left, and image_lower_right.\n"
     "For each region, list the visible annotated teeth using FDI notation and report each "
     "tooth condition.\n"
+    "You must include all four region keys and the summary key, even if a region has no "
+    "visible annotated teeth. Do not return a single-region report.\n"
+    "Every object in every teeth array must be separated by a comma. Do not omit commas.\n"
     "Return only valid JSON with this schema:\n"
     '{"regions":{"image_upper_left":{"teeth":[{"fdi":"string","condition":"string",'
     '"condition_name":"string"}],"comment":"string"},"image_upper_right":{"teeth":[{"fdi":'
@@ -77,15 +81,18 @@ def _quadrant_of(region_key, teeth):
 
 app = FastAPI(title="Dental Report Assistant")
 _engine = None   # loaded on first use
+_engine_lock = threading.Lock()
 
 
 def get_engine():
     """Build the inference engine once and reuse it."""
     global _engine
     if _engine is None:
-        import torch
-        from swift.llm import PtEngine
-        _engine = PtEngine(MODEL, torch_dtype=torch.bfloat16, adapters=[ADAPTER], max_batch_size=1)
+        with _engine_lock:
+            if _engine is None:
+                import torch
+                from swift.llm import PtEngine
+                _engine = PtEngine(MODEL, torch_dtype=torch.bfloat16, adapters=[ADAPTER], max_batch_size=1)
     return _engine
 
 
@@ -93,7 +100,6 @@ def get_engine():
 def _warm_up_model():
     """Load the model in a background thread at startup so the first upload is not slow and
     no page is blocked while it loads."""
-    import threading
     threading.Thread(target=get_engine, daemon=True).start()
 
 
@@ -105,9 +111,25 @@ def run_model(image_path):
         messages=[{"role": "user", "content": FULL_REPORT_PROMPT}],
         images=[image_path],
     )
-    config = RequestConfig(max_tokens=1280, temperature=0.0)
+    config = RequestConfig(max_tokens=4096, temperature=0.0)
     responses = engine.infer([request], config)
     return responses[0].choices[0].message.content
+
+
+def _has_report_content(report):
+    """True if the parsed report contains at least one tooth, comment, or summary."""
+    if not isinstance(report, dict):
+        return False
+    if report.get("summary"):
+        return True
+    regions = report.get("regions")
+    if isinstance(regions, dict):
+        for payload in regions.values():
+            if not isinstance(payload, dict):
+                continue
+            if payload.get("teeth") or payload.get("comment"):
+                return True
+    return bool(report.get("teeth") or report.get("comment"))
 
 
 # --------------------------------------------------------------------------- styling
@@ -154,7 +176,8 @@ h2{font-size:1.05rem;color:var(--teal-d);margin:0 0 .7rem;border-bottom:2px soli
 .empty{color:#90a4aa;font-style:italic;font-size:.85rem}
 details{margin-top:.4rem}
 details summary{cursor:pointer;color:var(--muted);font-size:.85rem}
-pre{background:#0f1f23;color:#cfe8ec;padding:.8rem;border-radius:8px;overflow:auto;font-size:.78rem}
+pre{background:#0f1f23;color:#cfe8ec;padding:.8rem;border-radius:8px;overflow:auto;font-size:.78rem;
+  white-space:pre-wrap;overflow-wrap:anywhere}
 a.back{display:inline-block;margin-top:1rem;color:var(--teal-d);text-decoration:none;font-weight:600}
 """
 
@@ -211,8 +234,9 @@ def results_page(report, image_data_uri, raw_text):
             sections.append((_quadrant_of(key, teeth), teeth, payload.get("comment", "")))
     else:
         teeth = report.get("teeth", []) or []
-        sections.append((_quadrant_of(report.get("region", ""), teeth),
-                         teeth, report.get("comment", "")))
+        comment = report.get("comment", "")
+        if teeth or comment:
+            sections.append((_quadrant_of(report.get("region", ""), teeth), teeth, comment))
     sections.sort(key=lambda s: s[0])
 
     # ---- one compact findings block per quadrant: a narrative line + a tooth list
@@ -294,11 +318,13 @@ async def analyze(file: UploadFile = File(...)):
         except OSError:
             pass
 
-    report = parse_prediction(raw_text)
-    if report is None:
+    report = parse_full_prediction(raw_text)
+    if report is None or not _has_report_content(report):
+        esc = lambda s: (s or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
         body = ("<div class='card'><h2>Could not read the report</h2>"
-                "<p>The model did not return valid JSON.</p>"
-                f"<pre>{raw_text}</pre><a class='back' href='/'>&larr; Try again</a></div>")
+                "<p>The model did not return a valid full report with four quadrants and a summary.</p>"
+                f"<p class='note'>{esc(parse_error(raw_text))}</p>"
+                f"<pre>{esc(raw_text)}</pre><a class='back' href='/'>&larr; Try again</a></div>")
         return page(body)
 
     mime = "image/png" if suffix.lower().endswith("png") else "image/jpeg"

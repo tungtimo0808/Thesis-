@@ -20,6 +20,7 @@ This file has no third-party dependencies; it only uses the Python standard libr
 """
 import html
 import json
+import re
 
 
 # --------------------------------------------------------------------------- label maps
@@ -50,29 +51,225 @@ REGION_NAMES = {
 
 # A fixed display order for the four regions in a full report.
 REGION_ORDER = ["image_upper_right", "image_upper_left", "image_lower_left", "image_lower_right"]
+RAW_REGION_ORDER = ["image_upper_left", "image_upper_right", "image_lower_left", "image_lower_right"]
+REGION_KEYS = {"image_upper_left", "image_upper_right", "image_lower_left", "image_lower_right"}
 
 
 # --------------------------------------------------------------------------- parsing
+def _is_report_shape(obj):
+    """True when a parsed object looks like one of the report schemas."""
+    if not isinstance(obj, dict):
+        return False
+    if isinstance(obj.get("regions"), dict):
+        return True
+    if isinstance(obj.get("teeth"), list):
+        return True
+    return False
+
+
+def _is_full_report_shape(obj):
+    """True when a parsed object has the full four-region report schema."""
+    if not isinstance(obj, dict):
+        return False
+    regions = obj.get("regions")
+    if not isinstance(regions, dict):
+        return False
+    if not REGION_KEYS.issubset(regions):
+        return False
+    for key in REGION_KEYS:
+        payload = regions.get(key)
+        if not isinstance(payload, dict) or not isinstance(payload.get("teeth"), list):
+            return False
+    return isinstance(obj.get("summary"), str)
+
+
+def _clean_prediction_text(prediction):
+    prediction = prediction.strip()
+    if prediction.startswith("```"):
+        prediction = prediction.strip("`").strip()
+    if prediction.startswith("json"):
+        prediction = prediction[4:].strip()
+    return prediction
+
+
+def _repair_json_text(prediction):
+    """Fix small JSON mistakes commonly made by the model."""
+    # The model sometimes omits the comma between adjacent tooth objects:
+    # [{"fdi": "35", ...} {"fdi": "36", ...}] or ...}{"fdi": "36"...}
+    return re.sub(r"}\s*(?=\{\s*\")", "}, ", prediction)
+
+
+def _insert_missing_comma(text, pos):
+    """Insert one likely missing comma near a JSONDecodeError position."""
+    window_start = max(0, pos - 20)
+    window_end = min(len(text), pos + 80)
+    for idx in range(window_start, window_end):
+        if text[idx] not in "}]":
+            continue
+        next_idx = idx + 1
+        while next_idx < len(text) and text[next_idx].isspace():
+            next_idx += 1
+        if next_idx < len(text) and text[next_idx] in '{"[':
+            return text[:next_idx] + ", " + text[next_idx:]
+    return text
+
+
+def _loads_json_with_repairs(prediction):
+    """Load JSON, repairing repeated missing-comma errors when possible."""
+    text = _repair_json_text(prediction)
+    for _ in range(20):
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError as exc:
+            if "delimiter" not in exc.msg and "comma" not in exc.msg.lower():
+                raise
+            repaired = _insert_missing_comma(text, exc.pos)
+            if repaired == text:
+                raise
+            text = repaired
+    return json.loads(text)
+
+
+def _parse_tooth_objects(text):
+    teeth = []
+    tooth_re = re.compile(
+        r'\{\s*"fdi"\s*:\s*"([^"]+)"\s*,\s*"condition"\s*:\s*"([^"]+)"'
+        r'\s*,\s*"condition_name"\s*:\s*"([^"]+)"\s*\}'
+    )
+    for match in tooth_re.finditer(text):
+        teeth.append({
+            "fdi": match.group(1),
+            "condition": match.group(2),
+            "condition_name": match.group(3),
+        })
+    return teeth
+
+
+def _extract_string_after_key(text, key):
+    match = re.search(r'"%s"\s*:\s*"((?:\\.|[^"\\])*)"' % re.escape(key), text)
+    if not match:
+        return ""
+    try:
+        return json.loads('"%s"' % match.group(1))
+    except Exception:
+        return match.group(1)
+
+
+def _parse_full_prediction_loose(prediction):
+    """Best-effort parser for malformed but schema-like model output."""
+    regions = {}
+    for index, key in enumerate(RAW_REGION_ORDER):
+        start_marker = '"%s"' % key
+        start = prediction.find(start_marker)
+        if start < 0:
+            return None
+        next_positions = [
+            prediction.find('"%s"' % next_key, start + len(start_marker))
+            for next_key in RAW_REGION_ORDER[index + 1:]
+        ]
+        next_positions.append(prediction.find('"summary"', start + len(start_marker)))
+        next_positions = [pos for pos in next_positions if pos >= 0]
+        end = min(next_positions) if next_positions else len(prediction)
+        chunk = prediction[start:end]
+        teeth_match = re.search(r'"teeth"\s*:\s*\[(.*?)\]\s*,\s*"comment"', chunk, re.S)
+        teeth_text = teeth_match.group(1) if teeth_match else chunk
+        regions[key] = {
+            "teeth": _parse_tooth_objects(teeth_text),
+            "comment": _extract_string_after_key(chunk, "comment"),
+        }
+    summary = _extract_string_after_key(prediction, "summary")
+    report = {"regions": regions, "summary": summary}
+    return report if _is_full_report_shape(report) else None
+
+
+def parse_full_prediction(prediction):
+    """Parse only a full four-region report; reject nested/single-region objects."""
+    if isinstance(prediction, dict):
+        return prediction if _is_full_report_shape(prediction) else None
+    if not isinstance(prediction, str):
+        return None
+    prediction = _clean_prediction_text(prediction)
+    candidates = [prediction, _repair_json_text(prediction)]
+    for candidate in candidates:
+        try:
+            obj = _loads_json_with_repairs(candidate)
+            return obj if _is_full_report_shape(obj) else None
+        except Exception:
+            pass
+    loose = _parse_full_prediction_loose(prediction)
+    if loose is not None:
+        return loose
+    try:
+        start = prediction.find("{")
+        if start >= 0:
+            obj, _ = json.JSONDecoder().raw_decode(_repair_json_text(prediction[start:]))
+            return obj if _is_full_report_shape(obj) else None
+    except Exception:
+        try:
+            obj, _ = json.JSONDecoder().raw_decode(prediction[start:])
+            return obj if _is_full_report_shape(obj) else None
+        except Exception:
+            return None
+
+
 def parse_prediction(prediction):
     """Accept a dict or a JSON string and return a dict, or None if it cannot be parsed.
 
-    The model sometimes wraps the JSON in extra text, so as a fallback we try to read the
-    object between the first '{' and the last '}'.
+    The model sometimes wraps the JSON in extra text, markdown fences, or explanatory
+    text after the JSON. As a fallback, read the first complete JSON object we can find.
     """
     if isinstance(prediction, dict):
-        return prediction
+        return prediction if _is_report_shape(prediction) else None
     if not isinstance(prediction, str):
         return None
-    try:
-        return json.loads(prediction)
-    except Exception:
-        start, end = prediction.find("{"), prediction.rfind("}")
-        if 0 <= start < end:
+    prediction = _clean_prediction_text(prediction)
+    candidates = [prediction, _repair_json_text(prediction)]
+    for candidate in candidates:
+        try:
+            obj = _loads_json_with_repairs(candidate)
+            return obj if _is_report_shape(obj) else None
+        except Exception:
+            pass
+    decoder = json.JSONDecoder()
+    for candidate in candidates:
+        for start, char in enumerate(candidate):
+            if char != "{":
+                continue
             try:
-                return json.loads(prediction[start:end + 1])
+                obj, _ = decoder.raw_decode(candidate[start:])
+                if _is_report_shape(obj):
+                    return obj
             except Exception:
-                return None
-        return None
+                pass
+    start, end = prediction.find("{"), prediction.rfind("}")
+    if 0 <= start < end:
+        try:
+            obj = _loads_json_with_repairs(prediction[start:end + 1])
+            return obj if _is_report_shape(obj) else None
+        except Exception:
+            pass
+    return None
+
+
+def parse_error(prediction):
+    """Return a short JSON parse error for debugging display."""
+    if not isinstance(prediction, str):
+        return "Model output is not text."
+    try:
+        obj = _loads_json_with_repairs(_clean_prediction_text(prediction))
+        if isinstance(obj, dict) and isinstance(obj.get("regions"), dict):
+            missing = sorted(REGION_KEYS.difference(obj["regions"]))
+            if missing:
+                return "JSON is valid but the full report is missing region keys: %s" % ", ".join(missing)
+            if not isinstance(obj.get("summary"), str):
+                return "JSON is valid but the full report is missing a string summary."
+            if _is_full_report_shape(obj):
+                return ""
+        return "JSON is valid but it does not match the full four-region report schema."
+    except json.JSONDecodeError as exc:
+        return "JSON error at line %s column %s: %s" % (exc.lineno, exc.colno, exc.msg)
+    except Exception as exc:
+        return str(exc)
 
 
 def _condition_name(tooth):
