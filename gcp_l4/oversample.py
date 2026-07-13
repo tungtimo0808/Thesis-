@@ -81,7 +81,7 @@ def main():
     for c, n in total.most_common():
         print("%-8s %10d %10d %7.1fx" % (c, n, after[c], after[c] / n))
     print("\nWrote", dst)
-    print("train.py will use it automatically (config.USE_BALANCED_TRAIN = True).")
+    print("Set config.USE_BALANCED_TRAIN = True if you want train.py to use it.")
 
 
 if __name__ == "__main__":

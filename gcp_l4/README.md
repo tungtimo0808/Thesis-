@@ -79,16 +79,11 @@ python vlm_report_dataset/training/tools/compare_models.py ~/pan924_runs/*/metri
 - `cm_counts_<model>.png`, `cm_norm_<model>.png`, `per_condition_<model>.png`
 
 ## Rare-class handling (your question: "make rare diseases easier to recognise")
-The dataset is very imbalanced (H : Dc ≈ 39 : 1). Several levers are built in:
+The dataset is very imbalanced (H : Dc ≈ 39 : 1). These levers are built in:
 
-1. **Image augmentation** (`augment_rare.py`, used by setup by default) — instead of duplicating a
-   rare report's pixels (overfit), it keeps the original + makes augmented image copies (brightness/
-   contrast/sharpness/±4° rotation; **never a flip** — that would swap left/right and break FDI). The
-   rare disease is seen under varied exposure → generalises better. Writes `train_balanced.jsonl`.
-   - Plain duplication fallback: `oversample.py` (no Pillow needed).
-   - **Honest limit:** every report still carries H/R teeth, so the class ratio only improves ~39:1 →
-     ~27:1. Augmentation makes those extra rare samples *useful* rather than memorised, but it is not
-     a magic fix.
+1. **Plain oversampling** (`oversample.py`) — duplicates training rows that contain rare conditions
+   and writes `train_balanced.jsonl`. Validation and test are unchanged. It is optional; set
+   `USE_BALANCED_TRAIN = True` in `config.py` if you want `train.py` to use it.
 
 2. **Rare-token loss up-weighting** (`rare_loss.py`, **opt-in**: `train.py <model> --rare-loss`) —
    multiplies the cross-entropy on rare disease-code tokens by `RARE_LOSS_WEIGHT` (default 3.0). This
@@ -105,13 +100,14 @@ The dataset is very imbalanced (H : Dc ≈ 39 : 1). Several levers are built in:
    truncated. `INFER_MAX_NEW_TOKENS = 1280` (vs the buggy 768) fixes truncation, lifting recall for
    **all** classes including rare ones.
 
-**Recommended combo:** augmentation (on) + `--rare-loss`. Run it as:
+**Recommended run:** rare-token loss. Run it as:
 ```bash
 python train.py qwen --rare-loss --smoke   # validate config + plugin (~2 min)
 python train.py qwen --rare-loss           # full run
 ```
-To push harder: raise `OVERSAMPLE_TARGET`/`REPLICATION_CAP` (re-run `augment_rare.py`),
-`RARE_LOSS_WEIGHT`, or `NUM_EPOCHS` (2→3) in `config.py`, then retrain.
+To push harder: raise `OVERSAMPLE_TARGET`/`REPLICATION_CAP` and run `python oversample.py`, set
+`USE_BALANCED_TRAIN = True`, raise `RARE_LOSS_WEIGHT`, or increase `NUM_EPOCHS` in `config.py`,
+then retrain.
 
 > ⚠️ `run_model.sh` does NOT pass `--rare-loss` by default (it's experimental). Either run the steps
 > by hand with the flag, or add it to the `python train.py "$MODEL"` line in `run_model.sh`.

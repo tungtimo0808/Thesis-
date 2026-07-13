@@ -24,7 +24,7 @@ Key files / Các file chính:
 
 - Dataset build / Tạo dataset: `vlm_report_dataset/scripts/build_5view_common_dataset.py`
 - Dataset convert / Chuyển format dataset: `vlm_report_dataset/scripts/convert_dataset.py`
-- Rare-class handling / Xử lý lớp hiếm: `gcp_l4/oversample.py`, `gcp_l4/augment_rare.py`, `gcp_l4/rare_loss.py`
+- Rare-class handling / Xử lý lớp hiếm: `gcp_l4/oversample.py`, `gcp_l4/rare_loss.py`
 - Training / Huấn luyện: `gcp_l4/train.py`, `gcp_l4/training/*/train.py`
 - Evaluation / Đánh giá: `gcp_l4/evaluate.py`, `vlm_report_dataset/scripts/eval_report.py`
 - Web demo / Demo web: `inference/app.py`, `inference/render_report.py`
@@ -406,33 +406,6 @@ Defense line / Câu nói khi bảo vệ:
 
 - EN: This is data-level rare-class balancing for the training split only.
 - VI: Đây là cân bằng lớp hiếm ở mức dữ liệu, chỉ áp dụng cho tập train.
-
-### `/home/keytwelvelab/pan924/gcp_l4/augment_rare.py`
-
-Purpose / Mục đích:
-
-- EN: Creates augmented image copies for rare-condition samples.
-- VI: Tạo ảnh augment cho các sample chứa condition hiếm.
-
-Input / Đầu vào:
-
-- EN: Training JSONL, original images, rare-class settings.
-- VI: File train JSONL, ảnh gốc, và cấu hình rare class.
-
-Output / Đầu ra:
-
-- EN: Augmented images and a balanced train JSONL.
-- VI: Ảnh augment và file train JSONL đã cân bằng.
-
-Important code / Phần quan trọng:
-
-- EN: Image augmentation, replication logic, JSONL rewriting.
-- VI: Hàm augment ảnh, logic nhân bản, ghi lại JSONL.
-
-Defense line / Câu nói khi bảo vệ:
-
-- EN: This is better than plain duplication because it gives the model varied images.
-- VI: Cách này tốt hơn duplicate đơn thuần vì model thấy ảnh có biến đổi.
 
 ### `/home/keytwelvelab/pan924/gcp_l4/rare_token_ids.py`
 
@@ -966,4 +939,3 @@ Defense line / Câu nói khi bảo vệ:
 
 - EN: This is not model logic; it is only an environment compatibility patch.
 - VI: Đây không phải logic model; chỉ là patch để môi trường chạy ổn định.
-

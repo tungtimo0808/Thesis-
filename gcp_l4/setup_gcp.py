@@ -78,12 +78,8 @@ def main():
     if not args.skip_oversample:
         env = os.environ.copy()
         env["PAN924_DATA_ROOT"] = data_root
-        builder = "augment_rare.py" if os.path.exists(os.path.join(code_dir, "augment_rare.py")) else "oversample.py"
-        print("\n[rebalance] building train_balanced.jsonl via %s ..." % builder)
-        rc = subprocess.run([sys.executable, builder], cwd=code_dir, env=env).returncode
-        if rc != 0 and builder == "augment_rare.py":
-            print("[rebalance] augmentation failed (Pillow?) — falling back to plain oversample.py")
-            subprocess.run([sys.executable, "oversample.py"], cwd=code_dir, env=env, check=False)
+        print("\n[rebalance] building train_balanced.jsonl via oversample.py ...")
+        subprocess.run([sys.executable, "oversample.py"], cwd=code_dir, env=env, check=False)
 
     print("\n=== SETUP DONE ===")
     print("Next steps:")
