@@ -1,29 +1,28 @@
-# Secrets / credentials
-*.token
-.env
-*.pem
-*.key
-hf_token*
-# Environments
+__pycache__/
+*.py[cod]
 .venv/
 venv/
-__pycache__/
-*.pyc
-.ipynb_checkpoints/
-# Heavy artifacts (keep code + small results only)
-*.zip
+
+# Data and images are kept on the server, not in GitHub.
+*.jpg
+*.jpeg
+*.png
+*.dcm
+*.jsonl
+vlm_report_dataset/common/images/
+vlm_report_dataset/common/images_aug/
+
+# Model checkpoints and run artifacts are too large for GitHub.
+pan924_runs/
+checkpoint-*/
 *.safetensors
 *.pt
 *.pth
-*.ckpt
 *.bin
-checkpoint-*/
-# Datasets (kept out of the repo)
-*.jsonl
-images/
-# OS
-.DS_Store
+runs/
 
-# Per-epoch training logs (kept out; summaries are tracked)
-results/epoch_*.json
-**/results/epoch_*.json
+# Local/editor files.
+.claude.json
+.bash_history
+.bash_logout
+.DS_Store

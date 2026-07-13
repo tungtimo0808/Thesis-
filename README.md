@@ -1,37 +1,22 @@
-# Thesis — Vision-Language Models for Automatic Dental Report Generation
+# PAN924 Server Code
 
-Bachelor thesis (USTH). The project fine-tunes and compares several Vision-Language
-Models (VLMs) for generating structured dental reports from panoramic X-ray images,
-and compares them against a Faster R-CNN recognition baseline.
+This repository mirrors the code structure used for the live server demo in:
 
-## Repository layout
+`/home/keytwelvelab/pan924`
 
-```
-report/      LaTeX thesis (report.tex + references.bib) and figures
-code/        Source code
-  gcp_l4/              VLM training/eval pipeline (QLoRA on a single L4 GPU, ms-swift)
-  faster_rcnn_fdi/     Faster R-CNN for tooth (FDI) detection
-  faster_rcnn_disease/ Faster R-CNN for condition (disease) detection
-  dataset_pipeline/    Dataset conversion and evaluation scripts
-results/     Per-model test metrics, text reports, and figures (no model weights)
-  qwen/ qwen3b/ internvl/ phi/ paligemma/
-```
+It contains code and documentation only. Images, JSONL datasets, checkpoints, and run artifacts are kept on the server and are intentionally not pushed to GitHub.
 
-## Models compared
+Main folders:
 
-| Key | Model | Size |
-|---|---|---|
-| qwen | Qwen2.5-VL-7B-Instruct | ~8B |
-| qwen3b | Qwen2.5-VL-3B-Instruct | ~3B |
-| internvl | InternVL3-8B | ~8B |
-| phi | Phi-3.5-vision-instruct | ~4.2B |
-| paligemma | PaliGemma 2 (3B, 448px) | ~3B |
+- `gcp_l4/` - training, evaluation, checkpoint selection, rare-class handling, and visualization.
+- `gcp_l4/training/` - model-specific QLoRA training scripts.
+- `vlm_report_dataset/scripts/` - dataset building, label merging, conversion, validation, rebalancing, and evaluation.
+- `vlm_report_dataset/training/tools/` - prediction conversion and model comparison tools.
+- `inference/` - FastAPI web demo.
+- `patches/` - runtime compatibility patch.
 
-All models use the same data, the same split, and the same QLoRA recipe, so the
-comparison is controlled. The best model on the test set is InternVL3-8B.
+Useful defense documents:
 
-## Not included
+- `code_file_io_guide_vi_en.md`
+- `code_file_io_guide_vi_en.docx`
 
-Model checkpoints, the image dataset, the `.jsonl` data files, and the Python
-environment are intentionally left out (size and licensing). The dataset is the
-PAN924 panoramic dental X-ray dataset.
